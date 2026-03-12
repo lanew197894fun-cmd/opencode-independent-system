@@ -8,7 +8,7 @@ mod commands;
 mod models;
 mod utils;
 
-use commands::{config, diagnostics, installer, process, service};
+use commands::{config, diagnostics, installer, process, service, network, security};
 
 fn main() {
     // 初始化日志 - 默认显示 info 级别日志
@@ -73,6 +73,19 @@ fn main() {
             // 版本更新
             installer::check_openclaw_update,
             installer::update_openclaw,
+            // 网络监控
+            network::check_router_status,
+            network::check_server_port,
+            network::repair_network_status,
+            network::get_default_gateway,
+            network::get_all_gateways,
+            network::get_wifi_status,
+            // 安全防护
+            security::get_security_status,
+            security::enable_full_protection,
+            security::enable_vpn_protection,
+            security::start_24h_monitor,
+            security::enable_rdp_protection,
         ])
         .run(tauri::generate_context!())
         .expect("运行 Tauri 应用时发生错误");

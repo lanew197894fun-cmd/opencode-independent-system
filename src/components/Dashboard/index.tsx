@@ -1,14 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { invoke } from '@tauri-apps/api/core';
-import { StatusCard } from './StatusCard';
-import { QuickActions } from './QuickActions';
-import { SystemInfo } from './SystemInfo';
-import { Setup } from '../Setup';
-import { api, ServiceStatus, isTauri } from '../../lib/tauri';
-import { Terminal, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
-import clsx from 'clsx';
-import { EnvironmentStatus } from '../../App';
+import { useEffect, useState, useRef } from "react";
+import { motion } from "framer-motion";
+import { invoke } from "@tauri-apps/api/core";
+import { StatusCard } from "./StatusCard";
+import { QuickActions } from "./QuickActions";
+import { SystemInfo } from "./SystemInfo";
+import { NetworkStatus } from "./NetworkStatus";
+import { SecurityShield } from "./SecurityShield";
+import { Setup } from "../Setup";
+import { api, ServiceStatus, isTauri } from "../../lib/tauri";
+import { Terminal, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import clsx from "clsx";
+import { EnvironmentStatus } from "../../App";
 
 interface DashboardProps {
   envStatus: EnvironmentStatus | null;
@@ -42,7 +44,7 @@ export function Dashboard({ envStatus, onSetupComplete }: DashboardProps) {
   const fetchLogs = async () => {
     if (!isTauri()) return;
     try {
-      const result = await invoke<string[]>('get_logs', { lines: 50 });
+      const result = await invoke<string[]>("get_logs", { lines: 50 });
       setLogs(result);
     } catch {
       // 静默处理
@@ -53,10 +55,10 @@ export function Dashboard({ envStatus, onSetupComplete }: DashboardProps) {
     fetchStatus();
     fetchLogs();
     if (!isTauri()) return;
-    
+
     const statusInterval = setInterval(fetchStatus, 3000);
     const logsInterval = autoRefreshLogs ? setInterval(fetchLogs, 2000) : null;
-    
+
     return () => {
       clearInterval(statusInterval);
       if (logsInterval) clearInterval(logsInterval);
@@ -66,7 +68,8 @@ export function Dashboard({ envStatus, onSetupComplete }: DashboardProps) {
   // 自动滚动到日志底部（仅在日志容器内部滚动，不影响页面）
   useEffect(() => {
     if (logsExpanded && logsContainerRef.current) {
-      logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
+      logsContainerRef.current.scrollTop =
+        logsContainerRef.current.scrollHeight;
     }
   }, [logs, logsExpanded]);
 
@@ -78,7 +81,7 @@ export function Dashboard({ envStatus, onSetupComplete }: DashboardProps) {
       await fetchStatus();
       await fetchLogs();
     } catch (e) {
-      console.error('启动失败:', e);
+      console.error("启动失败:", e);
     } finally {
       setActionLoading(false);
     }
@@ -92,7 +95,7 @@ export function Dashboard({ envStatus, onSetupComplete }: DashboardProps) {
       await fetchStatus();
       await fetchLogs();
     } catch (e) {
-      console.error('停止失败:', e);
+      console.error("停止失败:", e);
     } finally {
       setActionLoading(false);
     }
@@ -106,23 +109,35 @@ export function Dashboard({ envStatus, onSetupComplete }: DashboardProps) {
       await fetchStatus();
       await fetchLogs();
     } catch (e) {
-      console.error('重启失败:', e);
+      console.error("重启失败:", e);
     } finally {
       setActionLoading(false);
     }
   };
 
   const getLogLineClass = (line: string) => {
-    if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
-      return 'text-red-400';
+    if (
+      line.includes("error") ||
+      line.includes("Error") ||
+      line.includes("ERROR")
+    ) {
+      return "text-red-400";
     }
-    if (line.includes('warn') || line.includes('Warn') || line.includes('WARN')) {
-      return 'text-yellow-400';
+    if (
+      line.includes("warn") ||
+      line.includes("Warn") ||
+      line.includes("WARN")
+    ) {
+      return "text-yellow-400";
     }
-    if (line.includes('info') || line.includes('Info') || line.includes('INFO')) {
-      return 'text-green-400';
+    if (
+      line.includes("info") ||
+      line.includes("Info") ||
+      line.includes("INFO")
+    ) {
+      return "text-green-400";
     }
-    return 'text-gray-400';
+    return "text-gray-400";
   };
 
   const containerVariants = {
@@ -178,7 +193,7 @@ export function Dashboard({ envStatus, onSetupComplete }: DashboardProps) {
         <motion.div variants={itemVariants}>
           <div className="bg-dark-700 rounded-2xl border border-dark-500 overflow-hidden">
             {/* 日志标题栏 */}
-            <div 
+            <div
               className="flex items-center justify-between px-4 py-3 bg-dark-600/50 cursor-pointer"
               onClick={() => setLogsExpanded(!logsExpanded)}
             >
@@ -192,9 +207,9 @@ export function Dashboard({ envStatus, onSetupComplete }: DashboardProps) {
               <div className="flex items-center gap-3">
                 {logsExpanded && (
                   <>
-                    <label 
+                    <label
                       className="flex items-center gap-2 text-xs text-gray-400"
-                      onClick={e => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <input
                         type="checkbox"
@@ -226,27 +241,42 @@ export function Dashboard({ envStatus, onSetupComplete }: DashboardProps) {
 
             {/* 日志内容 */}
             {logsExpanded && (
-              <div ref={logsContainerRef} className="h-64 overflow-y-auto p-4 font-mono text-xs leading-relaxed bg-dark-800">
+              <div
+                ref={logsContainerRef}
+                className="h-64 overflow-y-auto p-4 font-mono text-xs leading-relaxed bg-dark-800"
+              >
                 {logs.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-gray-500">
-                    <p>暂无日志，请先启动服务</p>
+                    <p>暫無日誌，請先啟動服務</p>
                   </div>
                 ) : (
                   <>
                     {logs.map((line, index) => (
                       <div
                         key={index}
-                        className={clsx('py-0.5 whitespace-pre-wrap break-all', getLogLineClass(line))}
+                        className={clsx(
+                          "py-0.5 whitespace-pre-wrap break-all",
+                          getLogLineClass(line),
+                        )}
                       >
                         {line}
                       </div>
                     ))}
-
                   </>
                 )}
               </div>
             )}
           </div>
+        </motion.div>
+
+        {/* 三層防護系統 */}
+        <motion.div variants={itemVariants}>
+          <SecurityShield />
+        </motion.div>
+
+        {/* 網路偵測 */}
+        <motion.div variants={itemVariants}>
+          <NetworkStatus />
         </motion.div>
 
         {/* 系统信息 */}
