@@ -1,289 +1,194 @@
-# 🦞 OpenClaw Manager
+# 🦞 OpenClaw 一鍵部署工具
 
-高性能跨平台 AI 助手管理工具，基于 **Tauri 2.0 + React + TypeScript + Rust** 构建。
+> 🚀 一鍵部署你的私人 AI 助手 OpenClaw，支援多平台多模型配置
 
-![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-blue)
-![Tauri](https://img.shields.io/badge/Tauri-2.0-orange)
-![React](https://img.shields.io/badge/React-18-61DAFB)
-![Rust](https://img.shields.io/badge/Rust-1.70+-red)
+## 📖 目錄
 
-## 📸 界面预览
-
-### 📊 仪表盘概览
-
-实时监控服务状态，一键管理 AI 助手服务。
-
-![仪表盘](pic/dashboard.png)
-
-- 服务状态实时监控（端口、进程 ID、内存、运行时间）
-- 快捷操作：启动 / 停止 / 重启 / 诊断
-- 实时日志查看，支持自动刷新
-
----
-
-### 🤖 AI 模型配置
-
-灵活配置多个 AI 提供商，支持自定义 API 地址。
-
-![AI 配置](pic/ai.png)
-
-- 支持 14+ AI 提供商（Anthropic、OpenAI、DeepSeek、Moonshot、Gemini 等）
-- 自定义 API 端点，兼容 OpenAI 格式的第三方服务
-- 一键设置主模型，快速切换
-
----
-
-### 📱 消息渠道配置
-
-连接多种即时通讯平台，打造全渠道 AI 助手。
-
-<table>
-  <tr>
-    <td width="50%">
-      <img src="pic/telegram.png" alt="Telegram 配置">
-      <p align="center"><b>Telegram Bot</b></p>
-    </td>
-    <td width="50%">
-      <img src="pic/feishu.png" alt="飞书配置">
-      <p align="center"><b>飞书机器人</b></p>
-    </td>
-  </tr>
-</table>
-
-- **Telegram** - Bot Token 配置、私聊/群组策略
-- **飞书** - App ID/Secret、WebSocket 连接、多部署区域
-- **更多渠道** - Discord、Slack、WhatsApp、iMessage、微信、钉钉
-
----
+- [功能特性](#-功能特性)
+- [快速開始](#-快速開始)
+- [啟動器命令](#-啟動器命令)
+- [備份同步工具](#-備份同步工具)
+- [常用命令](#-常用命令)
+- [系統要求](#-系統要求)
 
 ## ✨ 功能特性
 
-| 模块 | 功能 |
-|------|------|
-| 📊 **仪表盘** | 实时服务状态监控、进程内存统计、一键启动/停止/重启 |
-| 🤖 **AI 配置** | 14+ AI 提供商、自定义 API 地址、模型快速切换 |
-| 📱 **消息渠道** | Telegram、Discord、Slack、飞书、微信、iMessage、钉钉 |
-| ⚡ **服务管理** | 后台服务控制、实时日志、开机自启 |
-| 🧪 **测试诊断** | 系统环境检查、AI 连接测试、渠道连通性测试 |
+### 🤖 多模型支援
 
-## 🍎 macOS 常见问题
+- Anthropic Claude (claude-sonnet-4-5)
+- OpenAI GPT (gpt-4o, gpt-4o-mini)
+- Google Gemini (gemini-2.0-flash)
+- OpenRouter / Groq / Mistral AI / Ollama
 
-### "已损坏，无法打开" 错误
+### 📱 多渠道接入
 
-macOS 的 Gatekeeper 安全机制可能会阻止运行未签名的应用。解决方法：
+- Telegram Bot
+- Discord Bot
+- WhatsApp
+- 飛書 (Feishu)
+- Slack / iMessage / 微信
 
-**方法一：移除隔离属性（推荐）**
+### 🛠️ 管理工具
 
-```bash
-# 对 .app 文件执行
-xattr -cr /Applications/OpenClaw\ Manager.app
+- **launcher.sh** - 整合啟動器
+- **model-router.sh** - 模型路由管理
+- **openclaw-guardian.sh** - 監護守護程序
+- **tools/backup-sync/** - 備份同步工具
 
-# 或者对 .dmg 文件执行（安装前）
-xattr -cr ~/Downloads/OpenClaw-Manager.dmg
-```
-
-**方法二：通过系统偏好设置允许**
-
-1. 打开 **系统偏好设置** > **隐私与安全性**
-2. 在 "安全性" 部分找到被阻止的应用
-3. 点击 **仍要打开**
-
-**方法三：临时禁用 Gatekeeper（不推荐）**
+## 🚀 快速開始
 
 ```bash
-# 禁用（需要管理员密码）
-sudo spctl --master-disable
+# 一鍵安裝
+curl -fsSL https://raw.githubusercontent.com/miaoxworld/OpenClawInstaller/main/install.sh | bash
 
-# 安装完成后重新启用
-sudo spctl --master-enable
+# 或手動安裝
+git clone https://github.com/miaoxworld/OpenClawInstaller.git
+cd OpenClawInstaller
+chmod +x install.sh
+./install.sh
 ```
 
-### 权限问题
-
-如果应用无法正常访问文件或执行操作：
-
-**授予完全磁盘访问权限**
-
-1. 打开 **系统偏好设置** > **隐私与安全性** > **完全磁盘访问权限**
-2. 点击锁图标解锁，添加 **OpenClaw Manager**
-
-**重置权限**
-
-如果权限设置出现异常，可以尝试重置：
+## 🎮 啟動器命令
 
 ```bash
-# 重置辅助功能权限数据库
-sudo tccutil reset Accessibility
+# 進入 OpenClawInstaller 目錄
+cd OpenClawInstaller
 
-# 重置完全磁盘访问权限
-sudo tccutil reset SystemPolicyAllFiles
+# 執行啟動器
+./launcher.sh
 ```
 
-## 🚀 快速开始
+### 啟動器功能表
 
-### 环境要求
+| 命令       | 說明                  |
+| ---------- | --------------------- |
+| `menu`     | 開啟主選單            |
+| `start`    | 啟動 OpenClaw Gateway |
+| `stop`     | 停止服務              |
+| `restart`  | 重啟服務              |
+| `status`   | 查看狀態              |
+| `health`   | 健康檢查              |
+| `logs`     | 查看日誌              |
+| `backup`   | 備份配置              |
+| `sync`     | 同步到外接儲存        |
+| `detect`   | 偵測外接儲存裝置      |
+| `usb`      | 開啟 USB 資料夾       |
+| `opencode` | 開啟 OpenCode         |
+| `web`      | 開啟網頁管理介面      |
 
-- **Node.js** >= 18.0
-- **Rust** >= 1.70
-- **pnpm** (推荐) 或 npm
+## 💾 備份同步工具
 
-### macOS 额外依赖
+位置：`tools/backup-sync/`
+
+### 腳本列表
+
+| 腳本                  | 功能                               |
+| --------------------- | ---------------------------------- |
+| `toolbox.sh`          | 備份工具箱主選單                   |
+| `sync-to-storage.sh`  | 同步到外接 USB/硬碟                |
+| `sync-project.sh`     | 自訂專案同步（含缺少套件偵測）     |
+| `detect-storage.sh`   | 偵測外接儲存裝置                   |
+| `restore-backup.sh`   | 從備份還原                         |
+| `local-backup.sh`     | 本地備份                           |
+| `list-backups.sh`     | 列出備份                           |
+| `check-status.sh`     | 檢查配置狀態                       |
+| `sync-to-windows.ps1` | PowerShell 同步腳本（WSL→Windows） |
+| `sync-to-windows.bat` | Batch 同步腳本（WSL→Windows）      |
+
+### 使用範例
 
 ```bash
-xcode-select --install
+cd tools/backup-sync
+
+# 開啟工具箱
+./toolbox.sh
+
+# 同步到 USB
+./sync-to-storage.sh /media/reamaster/USB
+
+# 偵測儲存裝置
+./detect-storage.sh
+
+# 同步自訂專案（含缺少套件偵測）
+./sync-project.sh /path/to/project /backup/path
+
+# 從 USB 還原
+./restore-backup.sh /media/reamaster/USB/backup_name
 ```
 
-### Windows 额外依赖
+### 缺少套件偵測
 
-- [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-- [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
+`sync-project.sh` 會自動偵測以下套件管理檔：
 
-### Linux 额外依赖
+- `package.json` (Node.js/pnpm)
+- `requirements.txt` (Python)
+- `Cargo.toml` (Rust)
+- `go.mod` (Go)
+- `Gemfile` (Ruby)
+- `composer.json` (PHP)
+- `pom.xml` / `build.gradle` (Java)
+
+偵測結果會產生 `MISSING_PACKAGES.txt` 檔案。
+
+### Windows 同步（WSL）
+
+在 Windows PowerShell 中執行：
+
+```powershell
+# 同步全部
+.\sync-to-windows.ps1 -All
+
+# 只同步專案
+.\sync-to-windows.ps1 -Manager
+
+# 只同步 OpenClaw 配置
+.\sync-to-windows.ps1 -OpenClaw
+```
+
+或使用 Batch 版本：
+
+```
+sync.bat all
+sync.bat manager
+sync.bat openclaw
+```
+
+## 📝 常用命令
 
 ```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+# 啟動服務
+openclaw gateway start
 
-# Fedora
-sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file libxdo-devel
+# 停止服務
+openclaw gateway stop
+
+# 查看狀態
+openclaw gateway status
+
+# 查看日誌
+openclaw logs
+
+# 健康檢查
+openclaw health
+
+# 執行配置選單
+bash ~/.openclaw/config-menu.sh
 ```
 
-### 安装与运行
+## 💻 系統要求
 
-```bash
-# 克隆项目
-git clone https://github.com/miaoxworld/openclaw-manager.git
-cd openclaw-manager
+| 項目     | 要求                                   |
+| -------- | -------------------------------------- |
+| 作業系統 | macOS 12+ / Ubuntu 20.04+ / Debian 11+ |
+| Node.js  | v22 或更高版本                         |
+| 記憶體   | 最低 2GB，推薦 4GB+                    |
 
-# 安装依赖
-npm install
+## 🔗 相關連結
 
-# 开发模式运行
-npm run tauri:dev
-
-# 构建发布版本
-npm run tauri:build
-```
-
-## 📁 项目结构
-
-```
-openclaw-manager/
-├── src-tauri/                 # Rust 后端
-│   ├── src/
-│   │   ├── main.rs            # 入口
-│   │   ├── commands/          # Tauri Commands
-│   │   │   ├── service.rs     # 服务管理
-│   │   │   ├── config.rs      # 配置管理
-│   │   │   ├── process.rs     # 进程管理
-│   │   │   └── diagnostics.rs # 诊断功能
-│   │   ├── models/            # 数据模型
-│   │   └── utils/             # 工具函数
-│   ├── Cargo.toml
-│   └── tauri.conf.json
-│
-├── src/                       # React 前端
-│   ├── App.tsx
-│   ├── components/
-│   │   ├── Layout/            # 布局组件
-│   │   ├── Dashboard/         # 仪表盘
-│   │   ├── AIConfig/          # AI 配置
-│   │   ├── Channels/          # 渠道配置
-│   │   ├── Service/           # 服务管理
-│   │   ├── Testing/           # 测试诊断
-│   │   └── Settings/          # 设置
-│   └── styles/
-│       └── globals.css
-│
-├── package.json
-├── vite.config.ts
-└── tailwind.config.js
-```
-
-## 🛠️ 技术栈
-
-| 层级 | 技术 | 说明 |
-|------|------|------|
-| 前端框架 | React 18 | 用户界面 |
-| 状态管理 | Zustand | 轻量级状态管理 |
-| 样式 | TailwindCSS | 原子化 CSS |
-| 动画 | Framer Motion | 流畅动画 |
-| 图标 | Lucide React | 精美图标 |
-| 后端 | Rust | 高性能系统调用 |
-| 跨平台 | Tauri 2.0 | 原生应用封装 |
-
-## 📦 构建产物
-
-运行 `npm run tauri:build` 后，会在 `src-tauri/target/release/bundle/` 生成：
-
-| 平台 | 格式 |
-|------|------|
-| macOS | `.dmg`, `.app` |
-| Windows | `.msi`, `.exe` |
-| Linux | `.deb`, `.AppImage` |
-
-## 🎨 设计理念
-
-- **暗色主题**：护眼舒适，适合长时间使用
-- **现代 UI**：毛玻璃效果、流畅动画
-- **响应式**：适配不同屏幕尺寸
-- **高性能**：Rust 后端，极低内存占用
-
-## 🔧 开发命令
-
-```bash
-# 开发模式（热重载）
-npm run tauri:dev
-
-# 仅运行前端
-npm run dev
-
-# 构建前端
-npm run build
-
-# 构建完整应用
-npm run tauri:build
-
-# 检查 Rust 代码
-cd src-tauri && cargo check
-
-# 运行 Rust 测试
-cd src-tauri && cargo test
-```
-
-## 📝 配置说明
-
-### Tauri 配置 (tauri.conf.json)
-
-- `app.windows` - 窗口配置
-- `bundle` - 打包配置
-- `plugins.shell.scope` - Shell 命令白名单
-- `plugins.fs.scope` - 文件访问白名单
-
-### 环境变量
-
-应用会读取 `~/.openclaw/env` 中的环境变量配置。
-
-## 🤝 贡献指南
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
-
-## 📄 许可证
-
-MIT License - 详见 [LICENSE](LICENSE)
-
-## 🔗 相关链接
-
-- [OpenClaw Manager](https://github.com/miaoxworld/openclaw-manager) - 图形界面版本（本项目）
-- [OpenClawInstaller](https://github.com/miaoxworld/OpenClawInstaller) - 命令行版本
-- [Tauri 官方文档](https://tauri.app/)
-- [React 官方文档](https://react.dev/)
+- [OpenClaw 官網](https://clawd.bot)
+- [官方文檔](https://clawd.bot/docs)
+- [OpenClaw 主儲存庫](https://github.com/openclaw/openclaw)
 
 ---
 
-**Made with ❤️ by OpenClaw Team**
+Made with ❤️ by OpenClaw Team
