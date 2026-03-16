@@ -1,0 +1,267 @@
+# 🔐 VPN × 24小時 × RDP 合架構實現指南
+
+## 📋 系統概覽
+
+### 🎯 核心理念
+
+- **VPN 層**: 提供可信網路邊界，確保所有遠程訪問都經過安全通道
+- **24小時防禦系統**: 六太陰×六天尊×三機構的三層智能防禦體系
+- **RDP 層**: 可被監控、可被中斷、可被隔離的遠端操作通道
+
+### 🏗️ 安全架構
+
+```
+┌─────────────────────────────────────────┐
+│              外部網路                        │
+├─────────────────────────────────────────┤
+│     VPN 通道 (可变可信边                │ ← 唯一層：網路主權
+├─────────────────────────────────────────┤
+│           24小時防禦系統                    │ ← 唯二層：智能防禦
+│  六太陰 × 六天尊 × 三機構 × 三層分離        │
+├─────────────────────────────────────────┤
+│              RDP 遠端操作                  │ ← 唯三層：可控行為
+├─────────────────────────────────────────┘
+```
+
+## 🚀 快速啟動
+
+### 方案一：完整系統啟動
+
+```bash
+bun run vpn-24h-rdp
+```
+
+### 方案二：組件分層啟動
+
+```bash
+# 1. 啟動 VPN 層
+bun script/vpn-security-hub.ts
+
+# 2. 啟動 24 小時防禦
+bun script/sec24-defense.ts
+
+# 3. 啟動 RDP 層
+bun script/rdp-layer.ts
+```
+
+## 📊 監控接口
+
+### 系統狀態查詢
+
+```bash
+# 獲取完整系統報告
+curl http://localhost:8080/api/system-status
+
+# 獲取 VPN 狀態
+curl http://localhost:8080/api/vpn-status
+
+# 獲取 24 小時防禦報告
+curl http://localhost:8080/api/sec24-report
+
+# 獲取 RDP 層狀態
+curl http://localhost:8080/api/rdp-status
+```
+
+### RDP 會話管理
+
+```bash
+# 建立 RDP 會話
+curl -X POST http://localhost:8080/api/rdp-connect \
+  -H "Content-Type: application/json" \
+  -d '{"user":"admin","clientIP":"192.168.1.100","trustLevel":"high"}'
+
+# 執行 RDP 命令
+curl -X POST http://localhost:8080/api/rdp-action \
+  -H "Content-Type: application/json" \
+  -d '{"sessionId":"session-id","action":"file_access","path":"C:\\"}'
+
+# 終止 RDP 會話
+curl -X POST http://localhost:8080/api/rdp-terminate \
+  -H "Content-Type: application/json" \
+  -d '{"sessionId":"session-id","reason":"管理員決定終止"}'
+```
+
+## 🔧 配置管理
+
+### VPN 配置文件位置
+
+```
+D:\R-Core\mods\vpnhub-wg\
+├─ config\
+│   └─ wg0.conf
+└─ scripts\
+│   └─ deploy\
+│   └─ health\
+│   └─ heal
+```
+
+### RDP 配置參數
+
+```json
+{
+  "maxSessions": 50,
+  "allowedPorts": [3389, 22],
+  "restrictedApps": ["cmd.exe", "powershell.exe"],
+  "monitoringLevel": "standard",
+  "autoQuarantine": true,
+  "sessionTimeout": 7200000
+}
+```
+
+## 🛡️ 安全策略
+
+### VPN 信任級別
+
+| 級級    | 描述     | 權限           |
+| ------- | -------- | -------------- |
+| High    | 最高信任 | 完全訪問權限   |
+| Medium  | 中等信任 | 大部分操作權限 |
+| Low     | 低信任   | 基本浏覽權限   |
+| Unknown | 未知信任 | 最小化權限     |
+
+### 24 小時防禦規則
+
+| 層次   | 組成   | 功能     | 時間限制    |
+| ------ | ------ | -------- | ----------- |
+| 文官層 | 六太陰 | 允許內容 | 09:00-18:00 |
+| 武官層 | 六天尊 | 安全操作 | 08:00-22:00 |
+| 管理層 | 三天尊 | 管理操作 | 06:00-23:59 |
+| 判斷層 | 三機構 | 系統分析 | 全天        |
+| 識別層 | 三機構 | 識別判斷 | 全天        |
+| 時空層 | 三機構 | 時空相關 | 全天        |
+
+### RDP 監控級別
+
+| 級級      | 監控強度 | 自動操作 |
+| --------- | -------- | -------- |
+| Light     | 輻本監控 | 日誌記錄 |
+| Standard  | 標遍監控 | 實時監控 |
+| Intensive | 深度監控 | 實時分析 |
+
+## 📈 使用場景
+
+### 開發環境
+
+```bash
+# 啟動完整系統
+bun run vpn-24h-rdp
+
+# 開發人員通過 VPN 建入
+mstsc /v:10.66.66.1
+```
+
+### 生產環境
+
+```bash
+# 只監控，不自動操作
+bun script/vpn-security-hub --monitor-only
+```
+
+### 應急響應
+
+```bash
+# 強制終止所有 RDP 會話
+bun script/rdp-layer --emergency-shutdown
+
+# 快速隔離高風險會話
+bun script/sec24-defense --quarantine-all
+```
+
+## 🔧 故障排除
+
+### 常見問題及解決方案
+
+#### VPN 連接失敗
+
+1. **檢查 WireGuard 服務狀態**
+
+   ```bash
+   bun script/vpn-security-hub --status
+   ```
+
+2. **檢查端口佔用情況**
+   ```cmd
+   netstat -ano | findstr :51820
+   ```
+
+#### RDP 會話無法建立
+
+1. **檢查 24 小時防禦系統**
+
+   ```bash
+   curl http://localhost:8080/api/sec24-report
+   ```
+
+2. **檢查信任級別配置**
+   ```bash
+   curl -X POST http://localhost:8080/api/vpn-client-details
+   ```
+
+#### 24 小時防禦誤報
+
+1. **檢查防禦日誌**
+
+   ```bash
+   curl http://localhost:8080/api/sec24-events?limit=20
+   ```
+
+2. **檢查風險評估**
+   ```bash
+   curl http://localhost:8080/api/sec24-risk-assessment
+   ```
+
+## 📊 日誌和監控
+
+### 日誌位置
+
+- VPN 日誌: `D:\R-Core\logs\vpn\*.log`
+- 24 小時防禦日誌: `D:\R-Core\logs\sec24\*.log`
+- RDP 層日誌: `D:\R-Core\logs\rdp\*.log`
+- 系統整合日誌: `D:\R-Core\logs\integration\*.log`
+
+### 實時監控接口
+
+```bash
+# WebSocket 連接
+ws://localhost:8080/ws
+
+# RESTful API
+http://localhost:8080/api/events
+```
+
+## 🚨 最佳實踐
+
+### 定期維護
+
+1. **每日檢查系統狀態**
+2. **每週評估風險趨勢**
+3. **每月更新安全規則**
+4. **每季度進行安全演練**
+
+### 安全建議
+
+1. **使用 VPN 進行所有遠端訪問**
+2. **定期更新 24 小時防禦規則**
+3. **對高風險 RDP 會話實時監控**
+4. **保持系統各層的日誌完整性**
+
+### 性能優化
+
+1. **合理設置會話超時時間**
+2. **定期清理過期會話**
+3. **監控系統資源使用情況**
+4. **優化 24 小時防禦算法效率**
+
+---
+
+🎉 **VPN × 24 小時 × RDP 架構已完全實現！**
+
+這套企業級安全遠程訪問系統提供了：
+
+- ✅ **三層安全架構**
+- ✅ **實時智能監控**
+- ✅ **自動風險評估**
+- ✅ **精確操作控制**
+- ✅ **完整審計追蹤**
+
+現在您可以根據需求調整配置，實現最適合的安全策略！ 🔒

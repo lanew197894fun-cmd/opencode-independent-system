@@ -1,0 +1,90 @@
+#開啟安全自動化系統控制台：
+bun script/security-console.ts
+控制台功能：
+╔═══════════════════════════════════════════════════════════════════╗
+║  OpenCode 安全系統控制台 v1.2.0                                ║
+║  Security Console - VPN × 24H Defense × Sandbox × Risk × Rollback  ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  【技術術語說明 Technical Terms】                              ║
+║                                                                ║
+║  Major 重大版本 - API 可能不相容，高風險                       ║
+║  Minor 次版本   - 新功能，需測試                               ║
+║  Patch  補丁     - Bug 修復，通常安全                          ║
+║  Security 安全更新 - 建議立即更新                              ║
+║                                                                ║
+║  【系統服務 Services】         ○ 手動                         ║
+║                                                                ║
+║  [1] VPN 安全中樞 (VPN Security Hub)  ○ 已停止                ║
+║  [2] 24H 防禦系統 (24H Defense System) ○ 已停止               ║
+║  [3] 沙盤模擬系統 (Sandbox System)      ○ 已停止              ║
+║  [4] 依賴風險管理器 (Dependency Risk Manager) ○ 已停止        ║
+║  [5] 回滾管理器 (Rollback Manager)     ○ 已停止               ║
+║                                                                ║
+║  【快速操作 Quick Actions】                                    ║
+║                                                                ║
+║  [6] 啟動所有服務 Start All    [7] 停止所有服務 Stop All       ║
+║  [8] 系統狀態總覽 Status      [9] 依賴風險分析 Analyze         ║
+║  [10] 監控 Monitor            [11] 啟動自動模式                ║
+║  [12] 診斷報告 Diagnostic     [13] 維護模式 Maint.             ║
+║  [0] 退出控制台 Exit                                           ║
+║                                                                ║
+
+【服務狀態 Service Status】
+┌─────────────────────────────────────────────────────────┐
+│ VPN 安全中樞     已停止 Stopped                                │
+│ 24H 防禦系統     已停止 Stopped                                │
+│ 沙盤模擬系統       已停止 Stopped                              │
+│ 依賴風險管理器      已停止 Stopped                             │
+│ 回滾管理器        已停止 Stopped                               │
+└─────────────────────────────────────────────────────────┘
+
+請輸入選項 Enter option: 
+
+也可以單獨啟動各服務：
+bun script/vpn-security-hub.ts      # VPN 安全中樞
+bun script/sec24-defense.ts         # 24H 防禦系統
+bun script/sandbox-system.ts        # 沙盤模擬系統
+bun script/dependency-risk-manager.ts  # 依賴風險管理
+bun script/rollback-manager.ts      # 回滾管理器
+bun run --cwd packages/opencode --conditions=browser src/index.ts
+
+
+# 先編譯
+cd packages/opencode && bun run build
+# 然後直接執行編譯後的 dist/index.js
+cd packages/opencode && bun dist/index.js
+
+bun run --cwd packages/opencode --conditions=browser src/index.ts
+
+
+
+自動開啟。計算機架構已經配置為自動啟動和監控系統。
+自動啟動方式
+1. 系統服務自動啟動
+- 監控服務：ji-san-ji-monitor.service 會自動監控系統狀態
+- 自動重啟：如果服務崩潰會自動重啟
+- 日誌輪轉：系統會自動清理舊日誌
+2. 啟動腳本
+- 執行 ./start-ji-san-ji.sh start 手動啟動
+- 或使用系統服務：sudo systemctl start ji-san-ji-monitor
+3. 監控系統
+- 5 分鐘檢查一次服務狀態
+- 自動檢測資源使用情況
+- 發現問題自動修復
+自動功能
+✅ 自動啟動 - 系統開機後自動啟動  
+✅ 自動監控 - 持續監控系統健康狀態  
+✅ 自動修復 - 服務崩潰自動重啟  
+✅ 自動清理 - 定期清理日誌和記憶資料  
+✅ 自動警報 - 發現問題自動發送警報
+手動控制
+如果需要手動控制，可以使用：
+# 啟動服務
+./start-ji-san-ji.sh start
+# 停止服務  
+./start-ji-san-ji.sh stop
+# 重啟服務
+./start-ji-san-ji.sh restart
+# 檢查狀態
+./start-ji-san-ji.sh status
+但建議讓系統自動運行，這樣可以確保計散機架構持續穩定地為您提供服務。

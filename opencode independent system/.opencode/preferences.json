@@ -1,0 +1,8 @@
+{
+  "language": "繁體中文",
+  "style": "自然語言 + 少許技術術語",
+  "skillDescription": "慣性顯示繁體中文",
+  "avoidSimplified": true,
+  "debugMode": "主動檢查而非索要錯誤訊息",
+  "updatedAt": "2026-03-17"
+}

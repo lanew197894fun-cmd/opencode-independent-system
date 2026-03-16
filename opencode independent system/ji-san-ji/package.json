@@ -1,0 +1,29 @@
+{
+  "name": "@opencode-ai/ji-san-ji",
+  "version": "1.0.0",
+  "description": "計散機架構 - 完全獨立的AI系統",
+  "main": "src/ji-san-ji/ji-san-ji-system.js",
+  "types": "src/ji-san-ji/types.ts",
+  "scripts": {
+    "test": "node src/ji-san-ji/test.js",
+    "build": "echo 'Build not implemented yet'",
+    "dev": "echo 'Dev mode not implemented yet'"
+  },
+  "keywords": [
+    "ai",
+    "independent-system",
+    "ji-san-ji",
+    "local-models",
+    "knowledge-base",
+    "problem-solver"
+  ],
+  "author": "OpenCode AI",
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^3.22.4",
+    "@opencode-ai/util": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0"
+  }
+}
