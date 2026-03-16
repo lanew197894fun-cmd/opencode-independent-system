@@ -1,0 +1,395 @@
+# ============================================================
+# OpenClaw 配置檔案範例
+# 複製此檔案到 ~/.openclaw/config.yaml 並修改相關配置
+# 詳細文檔: https://clawd.bot/docs/config
+# ============================================================
+
+# 配置版本
+version: "1.0"
+
+# 偵錯模式（生產环境请设为 false）
+debug: false
+
+# ============================================================
+# AI 模型配置
+# ============================================================
+llm:
+  # 支援的提供商商:
+  #   - anthropic         : Anthropic Claude (官方)
+  #   - openai            : OpenAI GPT (官方)
+  #   - openai-compatible : 任何兼容 OpenAI API 的服务 (OneAPI/NewAPI/代理等)
+  #   - ollama            : Ollama 本地端模型
+  #   - openrouter        : OpenRouter 多模型閘道
+  #   - google            : Google Gemini
+  #   - azure             : Azure OpenAI
+  #   - groq              : Groq (超快推理)
+  #   - mistral           : Mistral AI
+  #   - xai               : xAI Grok (Elon Musk)
+  #   - zai               : 智谱 GLM (中国)
+  #   - minimax           : MiniMax (国际)
+  #   - minimax-cn        : MiniMax (中国)
+  #   - opencode          : OpenCode (免费多模型)
+  #   - google-gemini-cli : Google Gemini CLI (实验性)
+  #   - google-antigravity: Google Antigravity (实验性)
+  provider: anthropic
+  
+  # API Key（从对应平台获取）
+  # Anthropic: https://console.anthropic.com/
+  # OpenAI: https://platform.openai.com/
+  # OpenRouter: https://openrouter.ai/
+  # Google: https://aistudio.google.com/apikey
+  # Groq: https://console.groq.com/
+  # Mistral: https://console.mistral.ai/
+  # xAI: https://console.x.ai/
+  # 智谱: https://open.bigmodel.cn/
+  # MiniMax: https://platform.minimax.chat/
+  # OpenCode: https://opencode.ai/
+  api_key: "sk-ant-your-api-key-here"
+  
+  # 模型选择
+  # Anthropic: claude-opus-4-20250514 / claude-sonnet-4-20250514 / claude-3-5-haiku-20241022
+  # OpenAI: gpt-4o / gpt-4o-mini / gpt-4-turbo / o1-preview
+  # Google: gemini-2.0-flash / gemini-1.5-pro / gemini-1.5-flash
+  # Groq: llama-3.3-70b-versatile / llama-3.1-8b-instant / mixtral-8x7b-32768
+  # Mistral: mistral-large-latest / mistral-medium-latest / codestral-latest
+  # xAI: grok-4-fast / grok-4 / grok-3-fast-latest / grok-2-vision-latest
+  # 智谱 (zai): glm-4.7 / glm-4.6 / glm-4.6v / glm-4.5-flash
+  # MiniMax: MiniMax-M2.1 / MiniMax-M2
+  # OpenCode: claude-sonnet-4-5 / gpt-4o / gemini-2.0-flash / glm-4.7-free
+  # Ollama: llama3 / mistral / codellama 等
+  # OpenAI Compatible: 根据你的服务支援的模型填写
+  model: claude-sonnet-4-20250514
+  
+  # 自定义 API 端點（必填项：openai-compatible, ollama, groq, mistral, azure）
+  # 示例:
+  #   - OpenAI Compatible: https://your-api.com/v1
+  #   - Ollama: http://localhost:11434
+  #   - Groq: https://api.groq.com/openai/v1
+  #   - Mistral: https://api.mistral.ai/v1
+  # base_url: "https://api.example.com/v1"
+  
+  # 模型參數
+  max_tokens: 4096          # 最大輸出 token 数
+  temperature: 0.7          # 温度參數 (0-1)，越高越随机
+  top_p: 0.9                # Top-p 采样
+  
+  # 重試配置
+  retry:
+    max_attempts: 3         # 最大重試次数
+    delay: 1000             # 重試間隔（毫秒）
+
+# ============================================================
+# OpenAI Compatible 配置示例
+# 适用于 OneAPI, New API, 各种代理服务等
+# ============================================================
+# llm:
+#   provider: openai-compatible
+#   base_url: "https://oneapi.example.com/v1"
+#   api_key: "sk-your-api-key"
+#   model: claude-sonnet-4.5
+#   max_tokens: 4096
+#   temperature: 0.7
+
+# ============================================================
+# 身份与個性配置
+# ============================================================
+identity:
+  # 助手名称
+  bot_name: "Clawd"
+  
+  # 如何稱呼你
+  user_name: "主人"
+  
+  # 時區（用于定時任務和时间显示）
+  # 常用: Asia/Shanghai, Asia/Tokyo, America/New_York, Europe/London
+  timezone: "Asia/Shanghai"
+  
+  # 語言
+  language: "zh-CN"
+  
+  # 個性描述（System Prompt 的一部分）
+  personality: |
+    你是一个聪明、幽默、有创造力的AI助手，名叫 Clawd。
+    你善于分析问题，提供商有见地的建议。
+    你的回覆简洁有力，避免冗长的解释。
+    你会记住使用者的偏好和之前的对话内容。
+    当不确定時，你会诚实地说不知道。
+  
+  # 額外的系統指令
+  system_instructions: |
+    - 优先使用中文回覆
+    - 程式碼块使用正确的语法高亮
+    - 重要資訊使用 emoji 标注
+
+# ============================================================
+# 閘道配置
+# ============================================================
+gateway:
+  # 監聽位址（127.0.0.1 仅本机存取，0.0.0.0 允許外部存取）
+  host: "127.0.0.1"
+  
+  # 監聽連接埠
+  port: 18789
+  
+  # API 金鑰（用于 HTTP API 鉴权）
+  # api_key: "your-gateway-api-key"
+
+# ============================================================
+# 消息渠道配置
+# ============================================================
+channels:
+  # ----------------------------------------------------------
+  # Telegram 配置
+  # ----------------------------------------------------------
+  telegram:
+    enabled: false
+    
+    # Bot Token（从 @BotFather 获取）
+    token: "your-telegram-bot-token"
+    
+    # 允許使用的使用者 ID 列表（从 @userinfobot 获取）
+    # 留空允許所有人（不推薦）
+    allowed_users:
+      - "123456789"
+      # - "another-user-id"
+    
+    # 允許的群組 ID（可选）
+    # allowed_groups:
+    #   - "-1001234567890"
+    
+    # 代理配置（可选，用于網路受限环境）
+    # proxy:
+    #   host: "127.0.0.1"
+    #   port: 7890
+    #   type: "socks5"  # http / socks5
+
+  # ----------------------------------------------------------
+  # Discord 配置
+  # ----------------------------------------------------------
+  discord:
+    enabled: false
+    
+    # Bot Token（从 Discord Developer Portal 获取）
+    token: "your-discord-bot-token"
+    
+    # 允許的频道 ID 列表
+    channels:
+      - "channel-id-1"
+      # - "channel-id-2"
+    
+    # 允許的使用者 ID（可选，留空允許所有频道成员）
+    # allowed_users:
+    #   - "user-id"
+
+  # ----------------------------------------------------------
+  # WhatsApp 配置
+  # ----------------------------------------------------------
+  whatsapp:
+    enabled: false
+    
+    # WhatsApp 使用二维码登录，运行 openclaw onboard --provider whatsapp
+
+  # ----------------------------------------------------------
+  # Slack 配置
+  # ----------------------------------------------------------
+  slack:
+    enabled: false
+    
+    # Bot Token (xoxb-...)
+    bot_token: "xoxb-your-bot-token"
+    
+    # App Token (xapp-...)
+    app_token: "xapp-your-app-token"
+    
+    # 允許的频道
+    channels:
+      - "general"
+
+  # ----------------------------------------------------------
+  # 微信配置
+  # ----------------------------------------------------------
+  wechat:
+    enabled: false
+    # 微信接入需要額外配置，运行 openclaw onboard --provider wechat
+
+  # ----------------------------------------------------------
+  # iMessage 配置 (仅 macOS)
+  # ----------------------------------------------------------
+  imessage:
+    enabled: false
+    # 需要完整磁盘存取权限，运行 openclaw onboard --provider imessage
+
+  # ----------------------------------------------------------
+  # 飞书配置 (Feishu/Lark)
+  # ----------------------------------------------------------
+  feishu:
+    enabled: false
+    
+    # App ID（从飞书开放平台获取）
+    app_id: "your-feishu-app-id"
+    
+    # App Secret（从飞书开放平台获取）
+    app_secret: "your-feishu-app-secret"
+    
+    # 連線模式: "websocket"（长連線，推薦）或 "webhook"
+    # 使用 websocket 长連線无需公网服务器
+    # 在飞书后台「事件与回调」选择「使用长連線接收事件」
+    connection_mode: "websocket"
+    
+    # 域名: "feishu"（国内）或 "lark"（国际版）
+    domain: "feishu"
+    
+    # 群聊中是否需要 @机器人 才响应
+    require_mention: true
+    
+    # ---- 以下配置仅 webhook 模式需要 ----
+    # 事件订阅驗證 Token（仅 webhook 模式需要）
+    # verify_token: "your-verify-token"
+    
+    # 加密金鑰（可选，仅 webhook 模式需要）
+    # encrypt_key: "your-encrypt-key"
+    
+    # Webhook 路徑（仅 webhook 模式需要）
+    # webhook_path: "/channels/feishu/webhook"
+
+# ============================================================
+# 記憶系統配置
+# ============================================================
+memory:
+  # 是否启用記憶
+  enabled: true
+  
+  # 記憶儲存路徑
+  storage_path: "~/.openclaw/data/memory"
+  
+  # 最大上下文长度（token）
+  max_context_length: 32000
+  
+  # 記憶保留天数（0 = 永久保留）
+  retention_days: 0
+  
+  # 自動總結（超过一定长度自動生成摘要）
+  auto_summarize:
+    enabled: true
+    threshold: 10000  # 触发總結的 token 阈值
+
+# ============================================================
+# Skills 技能系統
+# ============================================================
+skills:
+  # 是否启用技能系統
+  enabled: true
+  
+  # 技能檔案目錄
+  path: "~/.openclaw/skills"
+  
+  # 內建技能開關
+  builtin:
+    daily_report: true      # 每日报告
+    morning_briefing: true  # 晨间简报
+    reminder: true          # 智能提醒
+    web_search: true        # 網路搜索
+    code_runner: false      # 程式碼執行（需要启用 shell 权限）
+
+# ============================================================
+# 安全配置
+# ============================================================
+security:
+  # 允許執行系統命令（危險！）
+  enable_shell_commands: false
+  
+  # 允許檔案存取（危險！）
+  enable_file_access: false
+  
+  # 允許網路浏览
+  enable_web_browsing: true
+  
+  # 沙箱模式（推薦开启）
+  sandbox_mode: true
+  
+  # 命令黑名单（禁止執行的命令）
+  command_blacklist:
+    - "rm -rf"
+    - "sudo"
+    - "chmod"
+    - "chown"
+  
+  # 檔案存取白名单（仅当 enable_file_access 为 true 时生效）
+  file_whitelist:
+    - "~/.openclaw/"
+    - "~/Documents/"
+  
+  # 敏感資訊過濾
+  sensitive_filter:
+    enabled: true
+    patterns:
+      - "password"
+      - "secret"
+      - "api_key"
+      - "token"
+
+# ============================================================
+# 定時任務配置
+# ============================================================
+scheduler:
+  # 是否启用定時任務
+  enabled: true
+  
+  # 任務列表
+  tasks:
+    # 晨间简报
+    - name: "morning_briefing"
+      cron: "30 7 * * *"      # 每天 07:30
+      skill: "morning-briefing"
+      channels:
+        - telegram
+    
+    # 每日报告
+    - name: "daily_report"
+      cron: "0 20 * * *"      # 每天 20:00
+      skill: "daily-report"
+      channels:
+        - telegram
+
+# ============================================================
+# 日誌配置
+# ============================================================
+logging:
+  # 日誌級別: debug / info / warn / error
+  level: "info"
+  
+  # 日誌檔案路徑
+  path: "~/.openclaw/logs"
+  
+  # 单个日誌檔案最大大小
+  max_size: "10MB"
+  
+  # 保留的日誌檔案数量
+  max_files: 5
+  
+  # 是否輸出到控制台
+  console: true
+  
+  # 日誌格式: json / text
+  format: "text"
+
+# ============================================================
+# 進階配置
+# ============================================================
+advanced:
+  # 並發請求限制
+  concurrency: 5
+  
+  # 請求逾時（秒）
+  timeout: 120
+  
+  # 消息佇列配置
+  queue:
+    max_size: 100
+    process_interval: 100   # 毫秒
+  
+  # 健康檢查
+  health_check:
+    enabled: true
+    interval: 60            # 秒
+    endpoint: "/health"
