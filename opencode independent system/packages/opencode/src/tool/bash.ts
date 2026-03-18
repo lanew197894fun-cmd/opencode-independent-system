@@ -81,6 +81,22 @@ export const BashTool = Tool.define("bash", async () => {
         throw new Error(`Invalid timeout value: ${params.timeout}. Timeout must be a positive number.`)
       }
       const timeout = params.timeout ?? DEFAULT_TIMEOUT
+
+      const isPs1Script =
+        params.command.trim().endsWith(".ps1") || params.command.trim().match(/^powershell|^pwsh/i) !== null
+
+      let effectiveShell = shell
+      if (process.platform === "win32" && isPs1Script) {
+        const pwsh = Bun.which("pwsh")
+        if (pwsh) {
+          effectiveShell = pwsh
+          log.info("using pwsh (PS7)", { shell: effectiveShell })
+        } else {
+          effectiveShell = "powershell.exe"
+          log.info("using powershell (PS5)", { shell: effectiveShell })
+        }
+      }
+
       const tree = await parser().then((p) => p.parse(params.command))
       if (!tree) {
         throw new Error("Failed to parse command")
@@ -169,7 +185,7 @@ export const BashTool = Tool.define("bash", async () => {
         { env: {} },
       )
       const proc = spawn(params.command, {
-        shell,
+        shell: effectiveShell,
         cwd,
         env: {
           ...process.env,

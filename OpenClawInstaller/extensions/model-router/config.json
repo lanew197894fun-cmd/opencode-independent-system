@@ -1,0 +1,18 @@
+{
+  "id": "model-router",
+  "name": "Smart Model Router",
+  "version": "1.0.0",
+  "description": "Automatically routes requests to appropriate models based on complexity",
+  "author": "OpenClaw",
+  "models": {
+    "code": "ollama/qwen2.5-coder:3b",
+    "general": "ollama/llama3",
+    "fast": "ollama/llama3:70b",
+    "large": "anthropic/claude-3-5-sonnet"
+  },
+  "rules": {
+    "complexity_threshold": 500,
+    "word_threshold": 50,
+    "fallback": "fast"
+  }
+}

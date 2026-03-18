@@ -1,0 +1,16 @@
+{
+  "id": "vision-analyzer",
+  "name": "Vision Analyzer",
+  "version": "1.0.0",
+  "description": "Image analysis and explanation using vision models",
+  "config": {
+    "models": {
+      "openai": "gpt-4o",
+      "anthropic": "claude-3-5-sonnet-20241022",
+      "google": "gemini-2.0-flash-exp",
+      "ollama": "llama3.2-vision"
+    },
+    "max_tokens": 4096,
+    "default_prompt": "請詳細描述這張圖片的內容"
+  }
+}

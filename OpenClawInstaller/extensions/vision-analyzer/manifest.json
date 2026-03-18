@@ -1,0 +1,9 @@
+{
+  "manifest_version": 1,
+  "id": "vision-analyzer",
+  "name": "Vision Analyzer",
+  "description": "Image analysis and explanation using vision models",
+  "version": "1.0.0",
+  "entry": "index.js",
+  "permissions": ["http:read", "model:vision"]
+}

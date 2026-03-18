@@ -1,15 +1,48 @@
 #!/bin/bash
 #
-# ════════════════════════════════════════════════════════════════════════════
-# ║   🦞 OpenClaw 網關守護腳本 v1.0.0                                ║
-# ║   進程守護 • 資源監控 • 網路安全 • 自動備份                       ║
-# ════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
+# ║   🦞 OpenClaw 網關守護腳本 v1.0.0                                     ║
+# ║   進程守護 • 資源監控 • 網路安全 • 自動備份                            ║
+# ║   24靈防護 • 詐騙偵測                                                  ║
+# ═══════════════════════════════════════════════════════════════════════════
 #
-# 使用方法:
-#   ./openclaw-guardian.sh          - 互動式選單
-#   ./openclaw-guardian.sh daemon   - 啟動守護進程（常駐）
-#   ./openclaw-guardian.sh status   - 查看狀態
+# 說明：
+#   這是 OpenClaw 的守護程序，提供以下功能：
+#   - 自動監控 Gateway 進程，異常時自動重啟
+#   - 資源監控 (CPU/記憶體)
+#   - 防火牆設定
+#   - 自動備份
+#   - 24靈防護系統
+#   - 詐騙訊息偵測
 #
+# 使用方法：
+#   ./openclaw-guardian.sh menu        - 互動式選單
+#   ./openclaw-guardian.sh daemon      - 啟動守護進程（常駐）
+#   ./openclaw-guardian.sh start       - 啟動 Gateway
+#   ./openclaw-guardian.sh stop        - 停止 Gateway
+#   ./openclaw-guardian.sh restart     - 重啟 Gateway
+#   ./openclaw-guardian.sh status      - 查看狀態
+#   ./openclaw-guardian.sh monitor     - 資源監控
+#   ./openclaw-guardian.sh backup      - 執行備份
+#   ./openclaw-guardian.sh health      - 健康檢查
+#   ./openclaw-guardian.sh firewall    - 設定防火牆
+#   ./openclaw-guardian.sh 24guard     - 啟動 24靈防護
+#   ./openclaw-guardian.sh scam        - 詐騙訊息分析
+#   ./openclaw-guardian.sh help        - 顯示幫助
+#
+# 配置檔案：
+#   ~/.openclaw/guardian/config.conf   - 守護程序配置
+#   ~/.openclaw/guardian/guardian.log - 守護程序日誌
+#   ~/.openclaw/guardian/guardian.pid - 守護程序 PID
+#
+# 相關變數：
+#   GATEWAY_PORT     - Gateway 連接埠 (預設: 18789)
+#   MAX_MEMORY_MB    - 最大記憶體 MB (預設: 1024)
+#   MAX_CPU_PERCENT  - 最大 CPU % (預設: 80)
+#   CHECK_INTERVAL   - 檢查間隔秒數 (預設: 30)
+#   MAX_RESTART      - 最大重啟次數 (預設: 5)
+#
+# ═══════════════════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$HOME/.openclaw"

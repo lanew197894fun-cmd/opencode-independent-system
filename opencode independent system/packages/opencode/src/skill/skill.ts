@@ -42,148 +42,181 @@ export namespace Skill {
     }),
   )
 
-  // External skill directories to search for (project-level and global)
-  // These follow the directory layout used by Claude Code and other agents.
   const EXTERNAL_DIRS = [".claude", ".agents"]
   const EXTERNAL_SKILL_PATTERN = "skills/**/SKILL.md"
   const OPENCODE_SKILL_PATTERN = "{skill,skills}/**/SKILL.md"
   const SKILL_PATTERN = "**/SKILL.md"
 
-  export const state = Instance.state(async () => {
-    const skills: Record<string, Info> = {}
-    const dirs = new Set<string>()
+  type SkillIndex = Record<string, { location: string; description: string }>
 
-    const addSkill = async (match: string) => {
-      const md = await ConfigMarkdown.parse(match).catch((err) => {
+  const indexCache = new Map<string, Promise<SkillIndex>>()
+  const contentCache = new Map<string, Promise<Info | undefined>>()
+
+  async function scanIndex(root: string, pattern: string): Promise<SkillIndex> {
+    const index: SkillIndex = {}
+    const matches = await Glob.scan(pattern, {
+      cwd: root,
+      absolute: true,
+      include: "file",
+      symlink: true,
+    }).catch((error) => {
+      log.error("failed to scan skills", { dir: root, error })
+      return []
+    })
+
+    for (const match of matches) {
+      const md = await ConfigMarkdown.parse(match).catch(() => undefined)
+      if (!md) continue
+
+      const parsed = Info.pick({ name: true, description: true }).safeParse(md.data)
+      if (!parsed.success) continue
+
+      index[parsed.data.name] = {
+        location: match,
+        description: parsed.data.description,
+      }
+    }
+
+    return index
+  }
+
+  async function loadSkill(name: string): Promise<Info | undefined> {
+    if (contentCache.has(name)) return contentCache.get(name)
+
+    const promise = (async () => {
+      const index = await getIndex()
+      const entry = index[name]
+      if (!entry) return undefined
+
+      const md = await ConfigMarkdown.parse(entry.location).catch((err) => {
         const message = ConfigMarkdown.FrontmatterError.isInstance(err)
           ? err.data.message
-          : `Failed to parse skill ${match}`
+          : `Failed to parse skill ${entry.location}`
         Bus.publish(Session.Event.Error, { error: new NamedError.Unknown({ message }).toObject() })
-        log.error("failed to load skill", { skill: match, err })
+        log.error("failed to load skill", { skill: entry.location, err })
         return undefined
       })
 
-      if (!md) return
+      if (!md) return undefined
 
-      const parsed = Info.pick({ name: true, description: true }).safeParse(md.data)
-      if (!parsed.success) return
+      const parsed = Info.safeParse({ ...md.data, location: entry.location, content: md.content })
+      if (!parsed.success) return undefined
 
-      // Warn on duplicate skill names
-      if (skills[parsed.data.name]) {
-        log.warn("duplicate skill name", {
-          name: parsed.data.name,
-          existing: skills[parsed.data.name].location,
-          duplicate: match,
-        })
-      }
+      return parsed.data
+    })()
 
-      dirs.add(path.dirname(match))
+    contentCache.set(name, promise)
+    return promise
+  }
 
-      skills[parsed.data.name] = {
-        name: parsed.data.name,
-        description: parsed.data.description,
-        location: match,
-        content: md.content,
-      }
+  async function getIndex(): Promise<SkillIndex> {
+    let key: string
+    try {
+      key = Instance.directory
+    } catch {
+      key = "default"
     }
+    if (indexCache.has(key)) return indexCache.get(key)!
 
-    const scanExternal = async (root: string, scope: "global" | "project") => {
-      return Glob.scan(EXTERNAL_SKILL_PATTERN, {
-        cwd: root,
-        absolute: true,
-        include: "file",
-        dot: true,
-        symlink: true,
-      })
-        .then((matches) => Promise.all(matches.map(addSkill)))
-        .catch((error) => {
-          log.error(`failed to scan ${scope} skills`, { dir: root, error })
-        })
-    }
+    const promise = (async () => {
+      const skills: SkillIndex = {}
 
-    // Scan external skill directories (.claude/skills/, .agents/skills/, etc.)
-    // Load global (home) first, then project-level (so project-level overwrites)
-    if (!Flag.OPENCODE_DISABLE_EXTERNAL_SKILLS) {
-      for (const dir of EXTERNAL_DIRS) {
-        const root = path.join(Global.Path.home, dir)
-        if (!(await Filesystem.isDir(root))) continue
-        await scanExternal(root, "global")
-      }
-
-      for await (const root of Filesystem.up({
-        targets: EXTERNAL_DIRS,
-        start: Instance.directory,
-        stop: Instance.worktree,
-      })) {
-        await scanExternal(root, "project")
-      }
-    }
-
-    // Scan .opencode/skill/ directories
-    for (const dir of await Config.directories()) {
-      const matches = await Glob.scan(OPENCODE_SKILL_PATTERN, {
-        cwd: dir,
-        absolute: true,
-        include: "file",
-        symlink: true,
-      })
-      for (const match of matches) {
-        await addSkill(match)
-      }
-    }
-
-    // Scan additional skill paths from config
-    const config = await Config.get()
-    for (const skillPath of config.skills?.paths ?? []) {
-      const expanded = skillPath.startsWith("~/") ? path.join(os.homedir(), skillPath.slice(2)) : skillPath
-      const resolved = path.isAbsolute(expanded) ? expanded : path.join(Instance.directory, expanded)
-      if (!(await Filesystem.isDir(resolved))) {
-        log.warn("skill path not found", { path: resolved })
-        continue
-      }
-      const matches = await Glob.scan(SKILL_PATTERN, {
-        cwd: resolved,
-        absolute: true,
-        include: "file",
-        symlink: true,
-      })
-      for (const match of matches) {
-        await addSkill(match)
-      }
-    }
-
-    // Download and load skills from URLs
-    for (const url of config.skills?.urls ?? []) {
-      const list = await Discovery.pull(url)
-      for (const dir of list) {
-        dirs.add(dir)
-        const matches = await Glob.scan(SKILL_PATTERN, {
-          cwd: dir,
-          absolute: true,
-          include: "file",
-          symlink: true,
-        })
-        for (const match of matches) {
-          await addSkill(match)
+      let configDirs: string[] = []
+      let configSkills: { paths?: string[]; urls?: string[] } = {}
+      try {
+        configDirs = await Config.directories()
+        configSkills = (await Config.get()).skills ?? {}
+      } catch {
+        const opencodeDir = path.join(process.cwd(), ".opencode")
+        if (await Filesystem.isDir(opencodeDir)) {
+          configDirs = [opencodeDir]
         }
       }
-    }
 
-    return {
-      skills,
-      dirs: Array.from(dirs),
-    }
-  })
+      const scanAndMerge = async (root: string, pattern: string) => {
+        const index = await scanIndex(root, pattern)
+        Object.assign(skills, index)
+      }
+
+      if (!Flag.OPENCODE_DISABLE_EXTERNAL_SKILLS) {
+        for (const dir of EXTERNAL_DIRS) {
+          const root = path.join(Global.Path.home, dir)
+          if (await Filesystem.isDir(root)) await scanAndMerge(root, EXTERNAL_SKILL_PATTERN)
+        }
+
+        let instanceDir: string
+        let worktree: string
+        try {
+          instanceDir = Instance.directory
+          worktree = Instance.worktree
+        } catch {
+          instanceDir = process.cwd()
+          worktree = process.cwd()
+        }
+
+        for await (const root of Filesystem.up({
+          targets: EXTERNAL_DIRS,
+          start: instanceDir,
+          stop: worktree,
+        })) {
+          await scanAndMerge(root, EXTERNAL_SKILL_PATTERN)
+        }
+      }
+
+      for (const dir of configDirs) {
+        await scanAndMerge(dir, OPENCODE_SKILL_PATTERN)
+      }
+
+      for (const skillPath of configSkills.paths ?? []) {
+        const expanded = skillPath.startsWith("~/") ? path.join(os.homedir(), skillPath.slice(2)) : skillPath
+        let resolved: string
+        try {
+          resolved = path.isAbsolute(expanded) ? expanded : path.join(Instance.directory, expanded)
+        } catch {
+          resolved = path.isAbsolute(expanded) ? expanded : path.join(process.cwd(), expanded)
+        }
+        if (!(await Filesystem.isDir(resolved))) {
+          log.warn("skill path not found", { path: resolved })
+          continue
+        }
+        await scanAndMerge(resolved, SKILL_PATTERN)
+      }
+
+      for (const url of configSkills.urls ?? []) {
+        const list = await Discovery.pull(url)
+        for (const dir of list) {
+          await scanAndMerge(dir, SKILL_PATTERN)
+        }
+      }
+
+      return skills
+    })()
+
+    indexCache.set(key, promise)
+    return promise
+  }
 
   export async function get(name: string) {
-    return state().then((x) => x.skills[name])
+    return loadSkill(name)
   }
 
   export async function all() {
-    return state().then((x) => Object.values(x.skills))
+    const index = await getIndex()
+    const entries = await Promise.all(
+      Object.entries(index).map(async ([name, entry]) => {
+        const skill = await loadSkill(name)
+        return skill!
+      }),
+    )
+    return entries.filter(Boolean)
   }
 
   export async function dirs() {
-    return state().then((x) => x.dirs)
+    const index = await getIndex()
+    const dirs = new Set<string>()
+    for (const entry of Object.values(index)) {
+      dirs.add(path.dirname(entry.location))
+    }
+    return Array.from(dirs)
   }
 }

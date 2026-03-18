@@ -1,10 +1,38 @@
 #!/bin/bash
 #
-# ═══════════════════════════════════════════════════════════════════════
-# ║  🦞 OpenClaw + OpenCode 整合啟動器 v2.0                          ║
-# ║  一鍵啟動 • 狀態監控 • 資源管理 • 自動修復                        ║
-# ═══════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
+# ║  🦞 OpenClaw + OpenCode 整合啟動器 v2.0                               ║
+# ║  一鍵啟動 • 狀態監控 • 資源管理 • 自動修復                              ║
+# ═══════════════════════════════════════════════════════════════════════════
 #
+# 說明：
+#   這是 OpenClaw 的主要啟動腳本，提供服務管理、狀態監控、備份等功能。
+#
+# 使用方法：
+#   ./launcher.sh menu         - 互動式選單
+#   ./launcher.sh start        - 啟動服務
+#   ./launcher.sh stop         - 停止服務
+#   ./launcher.sh restart      - 重啟服務
+#   ./launcher.sh status       - 查看狀態
+#   ./launcher.sh health       - 健康檢查
+#   ./launcher.sh logs [行數]  - 查看日誌 (預設 50 行)
+#   ./launcher.sh backup      - 備份資料
+#   ./launcher.sh sync         - 同步配置
+#   ./launcher.sh detect       - 偵測外接儲存
+#   ./launcher.sh usb          - 同步到 USB
+#   ./launcher.sh opencode     - 開啟 OpenCode
+#   ./launcher.sh web          - 開啟網頁介面
+#   ./launcher.sh help         - 顯示幫助
+#
+# 環境變數：
+#   CONFIG_DIR    - OpenClaw 配置目錄 (預設: ~/.openclaw)
+#   GATEWAY_PORT  - Gateway 連接埠 (預設: 18789)
+#
+# 相關檔案：
+#   ~/.openclaw/env           - 環境變數配置
+#   ~/.openclaw/openclaw.json - OpenClaw 主配置
+#
+# ═══════════════════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$HOME/.openclaw"
@@ -21,17 +49,25 @@ log_info() { echo -e "${GREEN}[✓]${NC} $*"; }
 log_warn() { echo -e "${YELLOW}[!]${NC} $*"; }
 log_error() { echo -e "${RED}[✗]${NC} $*"; }
 
-# 獲取 PID
+# ═══════════════════════════════════════════════════════════════════════════
+# 函數說明
+# ═══════════════════════════════════════════════════════════════════════════
+
+# 獲取 Gateway 進程 ID (透過連接埠 18789)
+# 回傳: PID 或空值
 get_gateway_pid() { lsof -ti :18789 2>/dev/null | head -1; }
 
-# 服務狀態
+# 檢查 Gateway 是否運行中
+# 回傳: 0 (運行) 或 1 (停止)
 is_gateway_running() { [ -n "$(get_gateway_pid)" ]; }
 
-# 資源監控
+# 檢查資源使用情況 (CPU/記憶體)
+# 輸出: "CPU: X% | 記憶體: Y MB"
 check_resources() {
     local pid=$(get_gateway_pid)
     [ -z "$pid" ] && return 1
     
+    # 使用 ps 取得進程資源使用
     local stats=$(ps -p "$pid" -o %cpu,%mem,rss 2>/dev/null | tail -1)
     local cpu=$(echo "$stats" | awk '{print $1}')
     local mem_kb=$(echo "$stats" | awk '{print $3}')
