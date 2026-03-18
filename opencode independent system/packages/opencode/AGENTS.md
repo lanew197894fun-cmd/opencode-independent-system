@@ -8,3 +8,103 @@
 - **Command**: `bun run db generate --name <slug>`.
 - **Output**: creates `migration/<timestamp>_<slug>/migration.sql` and `snapshot.json`.
 - **Tests**: migration tests should read the per-folder layout (no `_journal.json`).
+
+## USB Sync Convention
+
+- **Always test in a separate folder first** before moving to production
+- **Delete test files immediately after testing** to avoid confusion
+- **Working directory**: `/media/reamaster/REMASTER KINGDOM/openclaw-manager_backup_20260317/`
+
+## 記憶系統
+
+```
+.opencode/memory/
+├── projects/     # 專案事實 (opencode, openclaw, anduinos...)
+├── topics/       # 技術經驗 (database, telegram, performance...)
+└── cache/        # 臨時調試 (用完可刪)
+```
+
+| 存放位置    | 內容範例                        |
+| ----------- | ------------------------------- |
+| `projects/` | 「OpenClaw 用 Telegram Bot」    |
+| `topics/`   | 「Telegram Webhook 需要 HTTPS」 |
+| `cache/`    | 當天測試結果，用完可刪          |
+
+### 記憶格式
+
+```
+## 專案名
+key:value|多值用|分隔
+key2:value2
+```
+
+- 避免縮排依賴
+- 用 `:` 或 `|` 分隔
+- 標題用 `##` 區塊
+
+## 記憶容器操作
+
+**自動調度原則**：處理任務時，主動根據關鍵字調用記憶，不要等用戶要求。
+
+```
+# 工具呼叫
+memory_recall(keywords: ["telegram", "openclaw"], category?: "projects"|"topics"|"cache")
+memory_store(category: "topics", filename: "telegram.md", content: "...", append?: true)
+memory_list(category?: "projects"|"topics"|"cache")
+```
+
+**調用時機**：
+
+- 用戶提到專案關鍵字 → recall projects
+- 用戶提到技術關鍵字 → recall topics
+- 執行任務後有新經驗 → store 到 topics
+- 臨時調試結果 → store 到 cache（用完可刪）
+
+### 自動調用關鍵字
+
+偵測到以下關鍵字時，自動調用相關記憶：
+
+| 分類        | 觸發關鍵字                                   |
+| ----------- | -------------------------------------------- |
+| opencode    | opencode                                     |
+| openclaw    | openclaw, telegram, bot                      |
+| anduinos    | anduinos, linux, iso, 編譯                   |
+| database    | database, drizzle, sqlite, migration, schema |
+| telegram    | telegram, webhook                            |
+| performance | performance, 優化, 快取, 延遲                |
+| powershell  | powershell, ps1, windows                     |
+
+## 記憶備份
+
+```
+# 備份到外接硬碟（隱藏目錄）
+memory_backup(target: "/media/reamaster/REMASTER KINGDOM/.memory-backup")
+
+# 還原
+memory_restore(source: "/media/reamaster/REMASTER KINGDOM/.memory-backup/memory-20260318")
+
+# 列表備份
+memory_backup_list(folder: "/media/reamaster/REMASTER KINGDOM/.memory-backup")
+```
+
+- 備份目錄：`.memory-backup`（隱藏）
+- 備份格式：`memory-YYYYMMDD`
+- 不與其他資料混在一起
+
+## Style Guide
+
+### Naming
+
+- snake_case for tables/columns
+- `<entity>_id` for join columns
+- `<table>_<column>_idx` for indexes
+
+### Schema (Drizzle)
+
+```ts
+const table = sqliteTable("session", {
+  id: text().primaryKey(),
+  project_id: text().notNull(),
+  created_at: integer().notNull(),
+})
+```

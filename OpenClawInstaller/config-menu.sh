@@ -7,6 +7,36 @@
 # ║                                                                           ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 #
+# 說明：
+#   這是 OpenClaw 的互動式配置選單，提供圖形化介面進行各種設定。
+#   支援終端機和管道模式執行。
+#
+# 使用方法：
+#   ./config-menu.sh                  - 啟動互動選單
+#   bash ~/.openclaw/config-menu.sh   - 直接執行已安裝版本
+#
+# 主要功能：
+#   1. 系統狀態 - 顯示 OpenClaw 安裝與運行狀態
+#   2. AI 模型配置 - 設定 Anthropic/OpenAI/DeepSeek/Kimi/Gemini 等
+#   3. 渠道配置 - 設定 Telegram/Discord/Slack/飛書/WhatsApp/iMessage/微信
+#   4. 插件管理 - 啟用/停用 OpenClaw 插件
+#   5. 測試功能 - 測試 AI API 和各渠道連線
+#   6. 診斷工具 - openclaw doctor/status/health
+#
+# 配置檔案：
+#   ~/.openclaw/env           - 環境變數 (API Key 等)
+#   ~/.openclaw/openclaw.json - OpenClaw 主配置
+#   ~/.openclaw/backups/      - 配置備份目錄
+#
+# 環境變數：
+#   TTY_INPUT - 輸入來源 (自動偵測)
+#
+# 依賴：
+#   - openclaw 命令 (安裝後可用)
+#   - jq 或 python3 (用於 JSON 處理)
+#   - curl (用於 API 測試)
+#
+# ════════════════════════════════════════════════════════════════════════════
 
 # ================================ TTY 偵測 ================================
 # 当通过 curl | bash 或被其他脚本调用时，stdin 可能不是终端

@@ -33,4 +33,4 @@ sudo apt install tailscale
 sudo tailscale up
 安裝並啟動 Tailscale 後，刷新管理器頁面即可看到 VPN 防護狀態更新為「啟用」。
 
-
+rsync -av --delete /home/reamaster/openclaw-manager/ /media/reamaster/REMASTER\ KINGDOM/openclaw-manager_backup_20260317/

@@ -32,31 +32,68 @@ import { Glob } from "../util/glob"
 export namespace ToolRegistry {
   const log = Log.create({ service: "tool.registry" })
 
+  type CustomTools = { custom: Tool.Info[] }
+  const customCache = new Map<string, Promise<CustomTools>>()
+
+  async function loadCustom(): Promise<CustomTools> {
+    let key: string
+    try {
+      key = Instance.directory
+    } catch {
+      key = "default"
+    }
+
+    if (customCache.has(key)) return customCache.get(key)!
+
+    const promise = (async (): Promise<CustomTools> => {
+      const custom = [] as Tool.Info[]
+
+      let dirs: string[] = []
+      try {
+        dirs = await Config.directories()
+      } catch {
+        const opencodeDir = path.join(process.cwd(), ".opencode")
+        const { Filesystem } = await import("../util/filesystem")
+        if (await Filesystem.isDir(opencodeDir)) {
+          dirs = [opencodeDir]
+        }
+      }
+
+      const matches = await Promise.all(
+        dirs.map((dir) => Glob.scan("{tool,tools}/*.{js,ts}", { cwd: dir, absolute: true, dot: true, symlink: true })),
+      ).then((arr) => arr.flat())
+
+      if (matches.length) await Config.waitForDependencies()
+
+      for (const match of matches) {
+        const namespace = path.basename(match, path.extname(match))
+        const mod = await import(match)
+        for (const [id, def] of Object.entries<ToolDefinition>(mod)) {
+          custom.push(fromPlugin(id === "default" ? namespace : `${namespace}_${id}`, def))
+        }
+      }
+
+      try {
+        const plugins = await Plugin.list()
+        for (const plugin of plugins) {
+          for (const [id, def] of Object.entries(plugin.tool ?? {})) {
+            custom.push(fromPlugin(id, def))
+          }
+        }
+      } catch {
+        // No instance context - skip plugin tools
+        log.info("no instance context, skipping plugin tools")
+      }
+
+      return { custom }
+    })()
+
+    customCache.set(key, promise)
+    return promise
+  }
+
   export const state = Instance.state(async () => {
-    const custom = [] as Tool.Info[]
-
-    const matches = await Config.directories().then((dirs) =>
-      dirs.flatMap((dir) =>
-        Glob.scanSync("{tool,tools}/*.{js,ts}", { cwd: dir, absolute: true, dot: true, symlink: true }),
-      ),
-    )
-    if (matches.length) await Config.waitForDependencies()
-    for (const match of matches) {
-      const namespace = path.basename(match, path.extname(match))
-      const mod = await import(match)
-      for (const [id, def] of Object.entries<ToolDefinition>(mod)) {
-        custom.push(fromPlugin(id === "default" ? namespace : `${namespace}_${id}`, def))
-      }
-    }
-
-    const plugins = await Plugin.list()
-    for (const plugin of plugins) {
-      for (const [id, def] of Object.entries(plugin.tool ?? {})) {
-        custom.push(fromPlugin(id, def))
-      }
-    }
-
-    return { custom }
+    return loadCustom()
   })
 
   function fromPlugin(id: string, def: ToolDefinition): Tool.Info {
@@ -84,7 +121,7 @@ export namespace ToolRegistry {
   }
 
   export async function register(tool: Tool.Info) {
-    const { custom } = await state()
+    const { custom } = await loadCustom()
     const idx = custom.findIndex((t) => t.id === tool.id)
     if (idx >= 0) {
       custom.splice(idx, 1, tool)
@@ -94,8 +131,13 @@ export namespace ToolRegistry {
   }
 
   async function all(): Promise<Tool.Info[]> {
-    const custom = await state().then((x) => x.custom)
-    const config = await Config.get()
+    const custom = await loadCustom().then((x) => x.custom)
+    let config: any = {}
+    try {
+      config = await Config.get()
+    } catch {
+      // fallback to empty config if no instance context
+    }
     const question = ["app", "cli", "desktop"].includes(Flag.OPENCODE_CLIENT) || Flag.OPENCODE_ENABLE_QUESTION_TOOL
 
     return [

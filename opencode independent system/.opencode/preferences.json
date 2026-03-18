@@ -4,5 +4,6 @@
   "skillDescription": "慣性顯示繁體中文",
   "avoidSimplified": true,
   "debugMode": "主動檢查而非索要錯誤訊息",
-  "updatedAt": "2026-03-17"
+  "updatedAt": "2026-03-18",
+  "note": "每次回覆必須使用繁體中文，不要用簡體字或英文"
 }
