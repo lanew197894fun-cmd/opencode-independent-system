@@ -1,0 +1,35 @@
+{
+  "name": "jsj-cli",
+  "version": "1.0.0",
+  "description": "獨立 CLI - 獨立 AI 系統 for Linux",
+  "type": "module",
+  "main": "cli/index.ts",
+  "bin": {
+    "jsj": "./cli/index.ts"
+  },
+  "scripts": {
+    "start": "bun run cli/index.ts",
+    "dev": "bun run --watch cli/index.ts",
+    "test": "bun run cli/test-runner.ts",
+    "repl": "bun run cli/index.ts"
+  },
+  "dependencies": {
+    "open": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  },
+  "keywords": [
+    "cli",
+    "ai",
+    "assistant",
+    "linux",
+    "獨立"
+  ],
+  "author": "Ji San Ji Team",
+  "license": "MIT"
+}

@@ -1,0 +1,65 @@
+# 智慧模組載入系統
+
+## 概述
+
+讓系統自動根據使用者需求載入所需的插件功能，減少資源佔用。
+小白免設定，AI 自動判斷觸發時機。
+
+## 檔案
+
+| 檔案                             | 功能                           |
+| -------------------------------- | ------------------------------ |
+| `src/plugin/intent-router.ts`    | 核心路由器，分析意圖並按需載入 |
+| `src/plugin/resource-monitor.ts` | 資源監控，偵測記憶體/CPU負載   |
+| `src/plugin/skill-autoload.ts`   | 首訊息智慧套件載入             |
+
+## 修改紀錄
+
+### 2026-03-24 - 智慧模組載入系統
+
+**修改檔案：**
+
+- `src/plugin/intent-router.ts` (new) - Intent 路由器
+- `src/plugin/resource-monitor.ts` (new) - 資源監控
+- `src/plugin/skill-autoload.ts` (update) - 擴展智慧套件
+- `src/plugin/index.ts` (update) - 啟用所有內建插件
+
+**修改內容：**
+
+1. 新增 intent-router.ts - 對話關鍵字分析，按需載入 plugin/skill
+2. 新增 resource-monitor.ts - 記憶體/CPU 偵測，資源閾值控制
+3. 擴展 skill-autoload.ts - 支援功能套件與資源感知
+4. 修改 plugin/index.ts - 工廠函數延遲載入避免循環依賴
+5. 啟用全部內建 plugin - 便攜版本無外部依賴
+
+**Intent 對應表**
+
+| Intent  | 關鍵字              | 插件            | 技能                  |
+| ------- | ------------------- | --------------- | --------------------- |
+| memory  | 記憶, 之前, 經驗    | -               | memory-pro, ai-memory |
+| debug   | 錯誤, bug, 修復     | -               | ai-debug, self-repair |
+| agent   | swarm, 多代理, 協作 | swarm, clawteam | -                     |
+| system  | 效能, 優化, 慢      | service-manager | system-optimizer      |
+| backup  | 備份, 同步          | backup-sync     | -                     |
+| channel | 訊息, telegram      | channel         | -                     |
+| todo    | 待辦, 任務          | -               | things-mac, trello    |
+
+## 便攜版本
+
+全部 plugin 內建，無需外部 npm 依賴：
+
+- CodexAuthPlugin, CopilotAuthPlugin, GitlabAuthPlugin
+- memoryProPlugin, clawTeamPlugin, swarmPlugin
+- backupSyncPlugin, serviceManagerPlugin, channelPlugin
+- skillAutoloadPlugin, intentRouterPlugin
+
+## 使用方式
+
+完全自動化，無需設定。AI 會自動偵測對話內容並載入需要的功能。
+
+## 測試結果
+
+- 資源偵測: ✅ 正常運作 (5009MB 可用, load 3.47)
+- Intent 偵測: ✅ 正確識別關鍵字
+- 模組導入: ✅ 無循環依賴問題
+- TypeScript: ✅ 編譯通過

@@ -1,104 +1,108 @@
-- To regenerate the JavaScript SDK, run `./packages/sdk/js/script/build.ts`.
-- ALWAYS USE PARALLEL TOOLS WHEN APPLICABLE.
-- The default branch in this repo is `dev`.
-- Local `main` ref may not exist; use `dev` or `origin/dev` for diffs.
-- Prefer automation: execute requested actions without confirmation unless blocked by missing info or safety/irreversibility.
+- 若要重新產生 JavaScript SDK，請執行 `./packages/sdk/js/script/build.ts`。
+- 盡可能使用平行工具。
+- 此儲存庫的預設分支是 `dev`。
+- 本地 `main` 引用可能不存在；使用 `dev` 或 `origin/dev` 進行差異比較。
+- 優先自動化：除非缺少資訊或安全/不可逆因素，否則直接執行請求的動作而不需確認。
 
-## Style Guide
+## 修復過程 查證過程 新增過程須紀錄相關知識 知識庫內
 
-### General Principles
+查找修正問題須紀錄查證過程
 
-- Keep things in one function unless composable or reusable
-- Avoid `try`/`catch` where possible
-- Avoid using the `any` type
-- Prefer single word variable names where possible
-- Use Bun APIs when possible, like `Bun.file()`
-- Rely on type inference when possible; avoid explicit type annotations or interfaces unless necessary for exports or clarity
-- Prefer functional array methods (flatMap, filter, map) over for loops; use type guards on filter to maintain type inference downstream
+## 程式碼風格指南
 
-### Naming
+### 基本原則
 
-Prefer single word names for variables and functions. Only use multiple words if necessary.
+- 除非可組合或可重複使用，否則將程式碼放在同一個函式中
+- 盡量避免使用 `try`/`catch`
+- 避免使用 `any` 類型
+- 盡可能使用單字變數名稱
+- 盡可能使用 Bun API，例如 `Bun.file()`
+- 盡依賴類型推斷；除非必要（為了匯出或清晰度），否則避免明確的類型註釋或介面
+- 優先使用函式式陣列方法（flatMap、filter、map）而非 for 迴圈；在 filter 上使用類型守衛以維持下游的類型推斷
+
+### 命名
+
+變數和函式優先使用單字名稱。只有在必要時才使用多個單字。
 
 ```ts
-// Good
+// 好的範例
 const foo = 1
 function journal(dir: string) {}
 
-// Bad
+// 不好的範例
 const fooBar = 1
 function prepareJournal(dir: string) {}
 ```
 
-Reduce total variable count by inlining when a value is only used once.
+當一個值只使用一次時，透過內聯來減少總變數數量。
 
 ```ts
-// Good
+// 好的範例
 const journal = await Bun.file(path.join(dir, "journal.json")).json()
 
-// Bad
+// 不好的範例
 const journalPath = path.join(dir, "journal.json")
 const journal = await Bun.file(journalPath).json()
 ```
 
-### Destructuring
+### 解構
 
-Avoid unnecessary destructuring. Use dot notation to preserve context.
+避免不必要的解構。使用點記號來保留上下文。
 
 ```ts
-// Good
+// 好的範例
 obj.a
 obj.b
 
-// Bad
+// 不好的範例
 const { a, b } = obj
 ```
 
-### Variables
+### 變數
 
-Prefer `const` over `let`. Use ternaries or early returns instead of reassignment.
+優先使用 `const` 而非 `let`。使用三元運算子或提前返回來代替重新賦值。
 
 ```ts
-// Good
+// 好的範例
 const foo = condition ? 1 : 2
 
-// Bad
+// 不好的範例
 let foo
 if (condition) foo = 1
 else foo = 2
 ```
 
-### Control Flow
+### 控制流
 
-Avoid `else` statements. Prefer early returns.
+避免 `else` 語句。優先使用提前返回。
 
 ```ts
-// Good
+// 好的範例
 function foo() {
   if (condition) return 1
   return 2
 }
 
-// Bad
+// 不好的範例
 function foo() {
   if (condition) return 1
   else return 2
 }
 ```
 
-### Schema Definitions (Drizzle)
+### Schema 定義 (Drizzle)
 
-Use snake_case for field names so column names don't need to be redefined as strings.
+欄位名稱使用 snake_case，這樣欄位名稱就不需要重新定義為字串。
 
 ```ts
-// Good
+// 好的範例
 const table = sqliteTable("session", {
   id: text().primaryKey(),
   project_id: text().notNull(),
   created_at: integer().notNull(),
 })
 
-// Bad
+// 不好的範例
 const table = sqliteTable("session", {
   id: text("id").primaryKey(),
   projectID: text("project_id").notNull(),
@@ -106,8 +110,8 @@ const table = sqliteTable("session", {
 })
 ```
 
-## Testing
+## 測試
 
-- Avoid mocks as much as possible
-- Test actual implementation, do not duplicate logic into tests
-- Tests cannot run from repo root (guard: `do-not-run-tests-from-root`); run from package dirs like `packages/opencode`.
+- 盡可能避免使用 mock
+- 測試實際實作，不要將邏輯複製到測試中
+- 測試無法從儲存庫根目錄執行（守衛：`do-not-run-tests-from-root`）；請從套件目錄執行，例如 `packages/opencode`。

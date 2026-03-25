@@ -95,6 +95,100 @@ db_file:remaster_reboot.sql|68MB
 db_tables:458個
 翻譯表:mapids|armor|weapon|skill|npc|quest
 
+## NPC與守衛
+
+npc表結構:
+npcid:NPC ID|name:名稱|type:類型(Guard/Door/Monster)|locx:X座標|locy:Y座標|mapid:地圖ID|level:等級|hp:HP|mp:MP|aggressive:攻擊性(0-2)|range:範圍
+守衛類型:
+
+- Guard:一般守衛|可對話|可攻擊
+- Door:門扉|可開關|控制進出
+- Merchant:商人|可交易
+- Monster:怪物|主動攻擊
+  守衛位置:/home/reamaster/REMASTER_KINGDOM/ServerDB/npc.sql
+
+## 安全系統 (2026-03-25)
+
+安全守衛:cli-v2/unified-security-guard.ts|防護內容:掃描eval/exec/spawn/子程序
+防護升級:新增15種繞過檢測|新增Sandbox函式|新增行為監控
+誤判:full-reference.md技術文檔|解決:加入白名單
+
+## Lobster 工作流 (2026-03-25)
+
+來源:https://github.com/openclaw/lobster|位置:extensions/lobster-source
+功能:typed JSON pipelines|jobs|approval gates
+命令:exec/run|where|pick/json|llm.invoke|approve
+安全:Shell隔離|LLM審批|環境變數|審計日誌
+
+## 翻譯辭典 (2026-03-25)
+
+位置:/media/reamaster/REMASTER KINGDOM/翻譯辭典*官方\_20260318/
+Data*台灣:825筆|Data*韓文|Data*英文:mapDesc+SpellDesc|台版:新檔
+英文來源:loadragon.com/en/mapids
+
+英文翻譯:
+
+- mapDesc-e.tbl:527筆(地圖)
+- SpellDesc-e.tbl:287筆(技能)
+- itemdesc-e.tbl:道具
+- npcinhouse-e.tbl:NPC
+
+## 資料庫翻譯流程 (2026-03-25)
+
+### 翻譯前測試
+
+1. 先測試樣本:head -20 查看原始數據
+2. 小規模測試:翻譯少量行數驗證
+3. 備份:cp original.sql backup.sql
+
+### 翻譯命令
+
+```bash
+INPUT=原始檔.sql
+OUTPUT=翻譯後.sql
+sed -e 's/축복받은/祝福的/g' \
+    -e 's/스냅퍼/史奈普/g' \
+    -e 's/마법/魔法/g' \
+    -e 's/저항/抵抗/g' \
+    -e 's/반지/戒指/g' \
+    -e 's/마나/魔力/g' \
+    -e 's/오크/歐克/g' \
+    -e 's/트롤/巨魔/g' \
+    -e 's/드래곤/龍/g' \
+    -e 's/의/的/g' \
+    "$INPUT" > "$OUTPUT"
+```
+
+### 翻譯後驗證
+
+1. 檢查格式:head -20
+2. 比對筆數:wc -l
+3. 抽查翻譯:grep 關鍵詞
+
+### 常用韓文翻譯
+
+- 축복받은→祝福的
+- 스냅퍼→史奈普
+- 마법/법술→魔法/法術
+- 저항→抵抗
+- 반지→戒指
+- 마나→魔力
+- Rooms/룸티스→魯提斯
+- 오크→歐克
+- 트롤→巨魔
+- 드래곤→龍
+- 갑옷→鎧甲
+- 검→劍
+- 방패→盾牌
+- 귀걸이→耳環
+- 의→的
+
+### 翻譯知識記錄
+
+- 原始檔:sql-backup/remaster_reboot_tw_final_20260318_0340.sql
+- 輸出檔:翻譯辭典\_官方\_20260318/remaster_reboot_tw_translated_v2.sql
+- 大小:65MB|筆數:566616行
+
 ## 地圖翻譯
 
 mapids表:458個地圖
@@ -126,6 +220,30 @@ javafx:全部not found|需安裝JavaFX SDK
 Stream:not found|需補齊JAR
 org.json:JSONObject not found|需補JSON庫
 TheDay.jar:jce.jar|rt.jar|路徑/usr/lib/jvm/java-8-openjdk-amd64
+
+## 核心依賴 (2026-03-25)
+
+### 缺失依賴(會無法啟動)
+
+- JavaFX:javafx.\*全部缺失
+- Stream:自定義JAR未找到
+- org.json:JSON庫缺失
+
+### 解決方案
+
+config/Synchronization.json:Operation_Manager:false(關閉UI)
+這樣可跳過JavaFX依賴直接啟動伺服器
+
+### UI決策
+
+根據設備配備決定是否開啟UI
+
+- 有JavaFX/足夠資源→可開啟UI
+- 無JavaFX/資源有限→關閉UI(預設)
+
+### Java路徑
+
+/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar|jce.jar
 
 翻譯:原文翻譯|測試
 

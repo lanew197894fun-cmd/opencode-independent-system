@@ -1,0 +1,35 @@
+{
+  "name": "@ia-core/independent-architecture",
+  "version": "1.4.0",
+  "description": "獨立架構 - 完全自主研發的私有化 AI 控制中心",
+  "type": "module",
+  "main": "independent-architecture-system.js",
+  "bin": {
+    "ia": "./cli-v2/index.ts",
+    "independent-architecture": "./cli-v2/index.ts"
+  },
+  "scripts": {
+    "start": "bun run cli-v2/index.ts",
+    "cli": "bun run cli-v2/index.ts",
+    "web": "bun run cli-v2/index.ts --web",
+    "gateway": "bun run cli-v2/index.ts --gateway",
+    "commander": "bun run cli-v2/index.ts --commander"
+  },
+  "keywords": [
+    "ai",
+    "independent",
+    "private-ai",
+    "self-hosted",
+    "local-ai",
+    "ai-control-center",
+    "plugin-system"
+  ],
+  "author": "Independent Architecture",
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0"
+  }
+}

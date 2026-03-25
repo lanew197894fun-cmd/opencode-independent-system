@@ -1,0 +1,5 @@
+好，測試重啟後是否正常運行：
+# 直接執行獨立版本（不依賴 bun）
+/home/reamaster/opencode-manager/opencode\ independent\ system/packages/opencode/dist/opencode-linux-x64/bin/opencode --version
+或者測試啟動服務：
+/home/reamaster/opencode-manager/opencode\ independent\ system/packages/opencode/dist/opencode-linux-x64/bin/opencode web

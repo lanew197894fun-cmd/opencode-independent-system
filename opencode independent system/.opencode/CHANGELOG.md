@@ -39,5 +39,5 @@
 - security-shield：大幅精簡（638 行 → ~100 行）
 - openclaw-integration：精簡並新增快取優化
 - self-learning：新增快取優化章節
-- ji-san-ji-debug：新增快取優化章節
+- independent-architecture-debug：新增快取優化章節
 - user-rules：新增效能優化建議

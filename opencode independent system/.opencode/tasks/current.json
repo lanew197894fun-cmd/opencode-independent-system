@@ -1,0 +1,33 @@
+{
+  "id": "task_1774278794550_8hbudz",
+  "userQuery": "如何修復 TS7006 錯誤",
+  "status": "in_progress",
+  "startTime": 1774278794550,
+  "steps": [
+    {
+      "name": "接收問題",
+      "status": "completed"
+    },
+    {
+      "name": "分析問題",
+      "status": "completed",
+      "detail": "檢測到需要搜索相關資訊"
+    },
+    {
+      "name": "判斷搜索",
+      "status": "in_progress"
+    },
+    {
+      "name": "執行搜索",
+      "status": "pending"
+    },
+    {
+      "name": "生成回覆",
+      "status": "pending"
+    },
+    {
+      "name": "驗證品質",
+      "status": "pending"
+    }
+  ]
+}

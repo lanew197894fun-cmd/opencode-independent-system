@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
+
+NO_OLLAMA="${NO_OLLAMA:-false}"
+NO_JI="${NO_JI:-false}"
+AUTO_OPEN="${AUTO_OPEN:-false}"
+PORT="${PORT:-3000}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -10,7 +15,6 @@ NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PID_FILE="/tmp/opencode_web_ji.pid"
-LOG_FILE="/tmp/opencode_web_ji.log"
 
 info() { echo -e "${BLUE}ℹ $1${NC}"; }
 success() { echo -e "${GREEN}✓ $1${NC}"; }
@@ -18,250 +22,163 @@ error() { echo -e "${RED}✗ $1${NC}"; }
 warn() { echo -e "${YELLOW}⚠ $1${NC}"; }
 
 show_help() {
-    echo "OpenCode Web + 計散機 啟動腳本"
     echo ""
-    echo "用法: $0 [選項]"
+    echo -e "${CYAN}╔═══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║         🚀 OpenCode 啟動腳本                      ║${NC}"
+    echo -e "${CYAN}╚═══════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo "選項:"
-    echo "  start           啟動服務 (預設)"
-    echo "  stop            停止服務"
-    echo "  restart         重新啟動服務"
-    echo "  status          查看服務狀態"
-    echo "  -p, --port      指定連接埠 (預設: 3000)"
-    echo "  -s, --password  設定伺服器密碼"
-    echo "  --no-ollama     不自動啟動 Ollama"
-    echo "  --open          啟動後自動開啟瀏覽器"
-    echo "  --no-ji         不啟動計散機"
-    echo "  -h, --help      顯示說明"
+    echo -e "${GREEN}🎯 快速使用:${NC}"
+    echo "   ./opencode-dev-start.sh web    # 網頁版 (推薦)"
+    echo "   ./opencode-dev-start.sh cli    # 終端版"
     echo ""
-    echo "範例:"
-    echo "  $0                    # 啟動 Web + 計算機"
-    echo "  $0 -p 8080           # 使用連接埠 8080"
-    echo "  $0 start             # 啟動服務"
-    echo "  $0 stop              # 停止服務"
-    echo "  $0 restart           # 重新啟動"
+    echo -e "${CYAN}📋 完整選項:${NC}"
+    echo "   start           啟動服務 (預設)"
+    echo "   stop            停止服務"
+    echo "   restart         重新啟動"
+    echo "   status          查看狀態"
+    echo "   -p <port>       指定端口"
+    echo "   -h, --help      顯示說明"
+    echo ""
+    echo -e "${YELLOW}💡 提示: 直接輸入 web 或 cli 即可啟動！${NC}"
+    echo ""
 }
 
 cleanup() {
     info "正在停止服務..."
-    
-    if [ -f "$PID_FILE" ]; then
-        MAIN_PID=$(cat "$PID_FILE")
-        if kill -0 "$MAIN_PID" 2>/dev/null; then
-            kill "$MAIN_PID" 2>/dev/null || true
-            sleep 1
-            kill -9 "$MAIN_PID" 2>/dev/null || true
-        fi
-        rm -f "$PID_FILE"
-    fi
-    
     pkill -f "opencode serve" 2>/dev/null || true
-    pkill -f "ji-san-ji" 2>/dev/null || true
-    pkill -f "bun run start.js" 2>/dev/null || true
-    
+    pkill -f "independent-architecture" 2>/dev/null || true
+    pkill -f "bun run dev:desktop" 2>/dev/null || true
+    rm -f "$PID_FILE"
     success "服務已停止"
     exit 0
 }
 
-trap cleanup SIGINT SIGTERM EXIT
-
 check_status() {
-    if [ -f "$PID_FILE" ]; then
-        MAIN_PID=$(cat "$PID_FILE")
-        if kill -0 "$MAIN_PID" 2>/dev/null; then
-            echo -e "${GREEN}● 服務執行中 (PID: $MAIN_PID)${NC}"
-            return 0
-        else
-            rm -f "$PID_FILE"
-        fi
+    echo ""
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}              📊 OpenCode 服務狀態${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    echo -e "${CYAN}🌐 網頁服務:${NC}"
+    if pgrep -f "opencode serve" > /dev/null; then
+        WEB_PID=$(pgrep -f "opencode serve" | head -1)
+        echo -e "  ${GREEN}● 執行中${NC} (PID: $WEB_PID)"
+    else
+        echo -e "  ${RED}● 未執行${NC}"
     fi
-    echo -e "${RED}● 服務未執行${NC}"
-    return 1
+    echo ""
+    
+    echo -e "${CYAN}💻 終端服務:${NC}"
+    if pgrep -f "independent-architecture" > /dev/null; then
+        CLI_PID=$(pgrep -f "independent-architecture" | head -1)
+        echo -e "  ${GREEN}● 執行中${NC} (PID: $CLI_PID)"
+    else
+        echo -e "  ${RED}● 未執行${NC}"
+    fi
+    echo ""
+    
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 }
 
 do_start() {
-    if [ -f "$PID_FILE" ]; then
-        MAIN_PID=$(cat "$PID_FILE")
-        if kill -0 "$MAIN_PID" 2>/dev/null; then
-            warn "服務已經在執行中 (PID: $MAIN_PID)"
-            return 1
-        else
-            rm -f "$PID_FILE"
-        fi
-    fi
-
-    PORT="${OPENCODE_PORT:-3000}"
-    NO_OLLAMA=false
-    AUTO_OPEN=false
-    NO_JI=false
-
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -p|--port)
-                PORT="$2"
-                shift 2
-                ;;
-            -s|--password)
-                export OPENCODE_SERVER_PASSWORD="$2"
-                shift 2
-                ;;
-            --no-ollama)
-                NO_OLLAMA=true
-                shift
-                ;;
-            --open)
-                AUTO_OPEN=true
-                shift
-                ;;
-            --no-ji)
-                NO_JI=true
-                shift
-                ;;
-            *)
-                shift
-                ;;
-        esac
-    done
-
+    local MODE="${1:-all}"
+    local BACKGROUND="${2:-false}"
+    
     echo -e "${BLUE}╔═══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║         OpenCode Web + 計算機系統 v1.0.0                  ║${NC}"
+    echo -e "${BLUE}║         🚀 OpenCode 啟動中...                         ║${NC}"
     echo -e "${BLUE}╚═══════════════════════════════════════════════════════════╝${NC}"
     echo ""
-
-    info "清理舊進程..."
-    pkill -f "opencode serve" 2>/dev/null || true
-    pkill -f "ji-san-ji" 2>/dev/null || true
-    sleep 1
-
-    info "檢查剪貼簿工具..."
-    if ! command -v wl-copy &> /dev/null && ! command -v xclip &> /dev/null && ! command -v xsel &> /dev/null; then
-        warn "缺少剪貼簿工具，安裝中..."
-        sudo apt update && sudo apt install -y wl-clipboard xclip 2>/dev/null || true
+    
+    if ! command -v wl-copy &> /dev/null && ! command -v xclip &> /dev/null; then
+        warn "缺少剪貼簿工具"
     fi
-
-    if [ "$NO_OLLAMA" = false ]; then
+    
+    if [ "$NO_OLLAMA" != "true" ]; then
         if ! pgrep -x "ollama" > /dev/null; then
             info "啟動 Ollama..."
             ollama serve &
             sleep 3
         fi
-        info "Ollama 可用模型:"
-        ollama list 2>/dev/null | grep -v "NAME" | head -5
+        info "Ollama 模型:"
+        ollama list 2>/dev/null | grep -v "NAME" | head -3
     fi
-
-    info "檢查伺服器設定..."
-    if [ -n "${OPENCODE_SERVER_PASSWORD:-}" ]; then
-        success "密碼已設定"
-    else
-        warn "未設定密碼，伺服器無保護"
-        echo -e "  ${YELLOW}提示: 使用 -s <密碼> 設定密碼${NC}"
-    fi
-
-    echo ""
-    echo "════════════════════════════════════════════════════════════"
-    echo "  🎯 啟動服務"
-    echo "════════════════════════════════════════════════════════════"
-
-    info "啟動 OpenCode Web 服務..."
-    cd "/media/reamaster/ab0f525c-ba17-43cf-baaa-dc9f1e5148d9/opencode/opencode independent system"
-    nohup opencode serve --port "$PORT" --hostname "0.0.0.0" --print-logs > /tmp/opencode.log 2>&1 &
-
-    sleep 3
-
-    if curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT | grep -q "200"; then
-        success "OpenCode Web 啟動成功"
-    else
-        error "OpenCode Web 啟動失敗"
-        tail -30 /tmp/opencode.log
-        exit 1
-    fi
-
-    echo ""
-    echo "════════════════════════════════════════════════════════════"
-    echo "  🌐 訪問地址"
-    echo "════════════════════════════════════════════════════════════"
-    echo ""
-    echo -e "  ${GREEN}本機訪問:${NC} http://localhost:$PORT"
-
-    for ip in $(hostname -I 2>/dev/null | tr ' ' '\n'); do
-        if [[ ! "$ip" =~ ^172\.(1[7-9]|2[0-9]|3[0-1])\. ]]; then
-            echo -e "    http://$ip:$PORT"
+    
+    if [ "$MODE" = "web" ] || [ "$MODE" = "all" ]; then
+        echo ""
+        echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+        echo -e "${CYAN}  🌐 啟動網頁服務${NC}"
+        echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+        
+        cd "$SCRIPT_DIR"
+        
+        # 檢查端口是否已被佔用
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT 2>/dev/null || echo "000")
+        if [ "$HTTP_CODE" = "200" ]; then
+            success "網頁服務已在運行中"
+        else
+            nohup opencode serve --port "$PORT" --hostname "0.0.0.0" > /tmp/opencode.log 2>&1 &
+            sleep 3
+            
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+                success "網頁服務啟動成功"
+            else
+                error "網頁服務啟動失敗"
+                echo -e "${YELLOW}💡 請先停止服務: ./opencode-dev-start.sh stop${NC}"
+            fi
         fi
-    done
-
-    TAILSCALE_IPV4=$(ip addr show tailscale0 2>/dev/null | grep inet | grep -v '::' | awk '{print $2}' | cut -d'/' -f1)
-    if [ -n "$TAILSCALE_IPV4" ]; then
-        echo -e "    ${CYAN}⚡ Tailscale: http://$TAILSCALE_IPV4:$PORT${NC}"
+        echo -e "  ${GREEN}👉 http://localhost:$PORT${NC}"
     fi
-
-    IPV6_GLOBAL=$(ip addr show tailscale0 2>/dev/null | grep 'inet6.*global' | awk '{print $2}' | cut -d'/' -f1)
-    if [ -n "$IPV6_GLOBAL" ]; then
-        echo -e "    ${CYAN}⚡ IPv6: http://[$IPV6_GLOBAL]:$PORT${NC}"
-    fi
-
-    echo ""
-
-    if [ "$NO_JI" = false ]; then
-        info "啟動計算機系統..."
-        cd "/media/reamaster/ab0f525c-ba17-43cf-baaa-dc9f1e5148d9/opencode/opencode independent system/ji-san-ji"
-        nohup bun run start.js > /tmp/ji-san-ji.log 2>&1 &
+    
+    if [ "$MODE" = "cli" ] || [ "$MODE" = "all" ]; then
+        echo ""
+        echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+        echo -e "${CYAN}  💻 啟動終端服務${NC}"
+        echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+        
+        cd "$SCRIPT_DIR/independent-architecture"
+        nohup bun run start.js > /tmp/independent-architecture.log 2>&1 &
         sleep 2
-        success "計算機已啟動"
+        success "終端服務已啟動"
     fi
-
+    
     echo ""
-
-    if [ "$AUTO_OPEN" = true ]; then
-        info "開啟瀏覽器..."
-        sleep 1
-        xdg-open "http://localhost:$PORT" 2>/dev/null || \
-        sensible-browser "http://localhost:$PORT" 2>/dev/null || \
-        echo "無法自動開啟瀏覽器，請手動訪問"
-    fi
-
+    echo -e "${GREEN}✅ 服務已在背景運行！${NC}"
+    echo -e "   查看狀態: ./opencode-dev-start.sh status"
+    echo -e "   停止服務: ./opencode-dev-start.sh stop"
     echo ""
-    echo -e "${GREEN}✅ 系統啟動完成！${NC}"
-    echo ""
-    echo "════════════════════════════════════════════════════════════"
-    echo ""
-    echo "  📋 可用功能:"
-    echo "     • Web 模式支援圖片上傳和截圖"
-    echo "     • Ollama 本地模型 (qwen3, deepseek-r1, moondream)"
-    echo "     • 計散機知識庫搜尋"
-    echo "     • 詐騙訊息偵測"
-    echo "     • VPN × 24靈 安全防護"
-    echo ""
-    echo "════════════════════════════════════════════════════════════"
-    echo ""
-    echo -e "${YELLOW}按 Ctrl+C 可停止服務${NC}"
-    echo ""
-
-    echo $$ > "$PID_FILE"
-
-    while true; do
-        sleep 1
-    done
+    
+    # 直接退出，讓服務在背景運行
+    exit 0
 }
 
-COMMAND="${1:-start}"
-shift || true
+COMMAND="${1:-help}"
+MODE="all"
+
+case "$COMMAND" in
+    web) MODE="web"; COMMAND="start" ;;
+    cli) MODE="cli"; COMMAND="start" ;;
+    all) MODE="all"; COMMAND="start" ;;
+esac
 
 case "$COMMAND" in
     start)
-        do_start "$@"
+        do_start "$MODE" "true"
         ;;
     stop)
         cleanup
+        exit 0
         ;;
     restart)
         cleanup
         sleep 2
-        do_start "$@"
+        do_start "$MODE"
         ;;
     status)
         check_status
         ;;
-    -h|--help)
+    help|-h|--help)
         show_help
         ;;
     *)

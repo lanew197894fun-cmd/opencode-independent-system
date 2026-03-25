@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "opencode": {
+      "options": {},
+    },
+  },
+  "skills": {
+    "paths": [
+      "/home/reamaster/opencode-manager/openclaw/skills",
+      "/home/reamaster/opencode-manager/openclaw/extensions",
+    ],
+    "autoload": ["memory-pro", "tools", "discord", "slack", "telegram", "line"],
+  },
+  "permission": {
+    "edit": {
+      "packages/opencode/migration/*": "deny",
+    },
+  },
+  "mcp": {},
+  "tools": {
+    "github-triage": false,
+    "github-pr-search": false,
+  },
+}

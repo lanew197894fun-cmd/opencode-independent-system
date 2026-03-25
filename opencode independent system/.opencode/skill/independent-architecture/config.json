@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "idle_minutes": 5,
+  "deep_scan_minutes": 5,
+  "auto_fix": true,
+  "notify_on_complete": true,
+  "check_interval": 30,
+  "checks": {
+    "system": true,
+    "services": true,
+    "security": true,
+    "performance": true
+  },
+  "cache_ttl": {
+    "quick": 60,
+    "standard": 180,
+    "deep": 600
+  },
+  "auto_repair": {
+    "memory_cleanup": true,
+    "service_restart": true,
+    "connection_retry": true,
+    "dependency_update": false
+  }
+}

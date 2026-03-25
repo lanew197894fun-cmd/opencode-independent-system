@@ -64,5 +64,32 @@ autoLoad: true
 
 ---
 
+## 本次對話維護紀錄
+
+記住本次對話做過的修改（下次對話優先查閱）：
+
+### 2026-03-25
+
+- **問題**：終端機開啟時殘留訊息 `clipboard: using xxx`
+- **原因**：`src/cli/cmd/tui/util/clipboard.ts` 第 79,88,97,110,125,149 行有 `console.log`
+- **修復**：移除所有 `console.log`（darwin/linux/win32/fallback）
+- **知識庫**：已存放 fact（可用 `knowledge_recall` 查詢）
+- **編譯**：`bun run build --single` → `0.0.0-linux-202603251326`
+- **重要**：遇到終端機殘留訊息，先搜 `console.log` 在 `src/cli/cmd/tui/` 目錄
+
+---
+
+## 已知問題 (Debug 檢查清單)
+
+當使用者回報終端機殘留訊息時，檢查以下項目：
+
+| 徵狀                   | 檢查位置                                                 |
+| ---------------------- | -------------------------------------------------------- |
+| `clipboard: using xxx` | `src/cli/cmd/tui/util/clipboard.ts` - 移除 `console.log` |
+| bun 殘留訊息           | 搜尋所有 `.quiet()` 確保命令安靜輸出                     |
+| 終端機閃爍/殘影        | 檢查 TUI 初始化時的 stdout/stderr 輸出                   |
+
+---
+
 **載入時間**: 每次對話開始時自動載入
 **更新方式**: 修改此檔案後，下次對話自動生效

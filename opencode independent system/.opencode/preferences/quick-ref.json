@@ -1,0 +1,8 @@
+{
+  "language": "繁體中文",
+  "avoidSimplified": true,
+  "style": "簡潔",
+  "debugMode": "主動檢查",
+  "skillDescription": "慣性顯示繁體中文",
+  "note": "每次回覆必須使用繁體中文"
+}

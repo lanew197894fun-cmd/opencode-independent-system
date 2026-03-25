@@ -1,15 +1,17 @@
-# 天堂R 原始碼
+## 天堂R 私人伺服器
 
-## 現有資料
+狀態: 資料庫就緒，JAR 需修復
 
-- src (2): 備份資料 (3015 個 Java 檔案)
-- 原始碼位置: 不明
+### 已完成
+- MariaDB 10.11 安裝
+- 資料庫 remaster_reboot 匯入（334表）
+- Operation_Manager: false
 
-## 待確認
+### 問題
+- TheDay.jar 的 MJFX.MJFxEntry 缺少 main 方法
+- 需重新編譯或找備份
 
-- 原始碼路徑
-- 是否有韓文類名/變量名
-
-## 翻譯現況
-
-- 資料庫翻譯: 73.7%
+### 路徑
+- 伺服器: /home/reamaster/REMASTER_KINGDOM
+- SQL: /media/reamaster/REMASTER KINGDOM/sql-backup/
+- 原始碼: /home/reamaster/REMASTER_KINGDOM/src (2)

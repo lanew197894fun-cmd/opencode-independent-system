@@ -235,6 +235,64 @@ const backupList = tool({
   },
 })
 
+const LESSON_TRIGGERS = ["記住這個", "記住", "要記住", "这个记住", "記錄這個", "記錄下來"]
+const WHY_TRIGGERS = ["為什麼", "為啥", "怎麼會", "為甚麼", "why"]
+const FIX_TRIGGERS = ["解決了", "修好了", "修復", "fixed", "resolved", "搞定"]
+
+function detectLessonMoment(text: string): { type: "explicit" | "why" | "fix" } | null {
+  const lower = text.toLowerCase()
+  if (LESSON_TRIGGERS.some((t) => lower.includes(t))) return { type: "explicit" }
+  if (WHY_TRIGGERS.some((t) => lower.includes(t))) return { type: "why" }
+  if (FIX_TRIGGERS.some((t) => lower.includes(t))) return { type: "fix" }
+  return null
+}
+
+const lessonStore = tool({
+  description: "Store a lesson (fact or decision) to long-term memory",
+  args: {
+    type: z.enum(["fact", "decision"]).describe("Lesson type: fact (問題.原因.解決) or decision (原則.觸發)"),
+    content: z.string().describe("The lesson content following the format"),
+  },
+  async execute({ type, content }, ctx: ToolContext) {
+    const dir = `${ctx.worktree}/.opencode/memory/topics`
+    await Bun.$`mkdir -p ${dir}`
+
+    const path = `${dir}/lesson.md`
+    const exists = await Bun.file(path).exists()
+
+    const timestamp = new Date().toISOString().slice(0, 10)
+    const formatted = type === "fact" ? `## fact ${timestamp}\n${content}` : `## decision ${timestamp}\n${content}`
+
+    if (exists) {
+      const existing = await Bun.file(path).text()
+      await Bun.write(path, `${existing}\n\n${formatted}`)
+    } else {
+      await Bun.write(path, formatted)
+    }
+
+    const verify = await Bun.file(path).exists()
+    return verify ? `已記住 lesson (${type})` : "儲存失敗"
+  },
+})
+
+const lessonRecall = tool({
+  description: "Recall lessons (facts and decisions) from memory",
+  args: {
+    query: z.string().optional().describe("Optional query to filter lessons"),
+  },
+  async execute({ query }, ctx: ToolContext) {
+    const path = `${ctx.worktree}/.opencode/memory/topics/lesson.md`
+    if (!(await Bun.file(path).exists())) return "尚無 lesson 記錄"
+
+    const content = await Bun.file(path).text()
+    if (!query) return content
+
+    const lines = content.split("\n")
+    const matched = lines.filter((l) => l.toLowerCase().includes(query.toLowerCase()))
+    return matched.length > 0 ? matched.join("\n") : "無相關 lesson"
+  },
+})
+
 export const memoryPlugin = async (input: any) => ({
   tool: {
     memory_recall: recall,
@@ -243,8 +301,10 @@ export const memoryPlugin = async (input: any) => ({
     memory_backup: backup,
     memory_restore: restore,
     memory_backup_list: backupList,
+    lesson_store: lessonStore,
+    lesson_recall: lessonRecall,
   },
-  async "chat.message"(input: { messageID?: string }, output: { message: any; parts: any[] }) {
+  async "chat.message"(input: { message?: string; messageID?: string }, output: { message: any; parts: any[] }) {
     const text = output.parts.map((p: any) => p.text ?? "").join(" ")
     const keywords = Object.keys(KEYWORD_MAP)
     const matched = keywords.filter((kw) => text.toLowerCase().includes(kw.toLowerCase()))
@@ -253,6 +313,27 @@ export const memoryPlugin = async (input: any) => ({
       const memories = await autoRecall(matched, output.message?.directory ?? ".")
       if (memories) {
         output.parts.push({ type: "text", text: `\n[自動調用記憶]\n${memories}` })
+      }
+    }
+
+    const userText = input.message ?? ""
+    const lessonMoment = detectLessonMoment(userText)
+    if (lessonMoment && input.messageID) {
+      const prompt =
+        lessonMoment.type === "explicit"
+          ? "\n[偵測到記錄請求] 要將這段記為 lesson 嗎？格式：fact: 問題.原因.解決 或 decision: 原則.觸發"
+          : lessonMoment.type === "why"
+            ? "\n[偵測到决策時刻] 要將這個决策記為 lesson 嗎？格式：decision: 原則.觸發"
+            : "\n[偵測到修復經驗] 要將這個經驗記為 lesson 嗎？格式：fact: 問題.原因.解決"
+      output.parts.push({ type: "text", text: prompt })
+    }
+
+    if (text.toLowerCase().includes("lesson") || text.toLowerCase().includes("之前記過")) {
+      const lessons = await lessonRecall.execute({ query: undefined }, {
+        worktree: output.message?.directory ?? ".",
+      } as ToolContext)
+      if (lessons && !lessons.startsWith("尚無")) {
+        output.parts.push({ type: "text", text: `\n[Lesson 召回]\n${lessons}` })
       }
     }
   },
