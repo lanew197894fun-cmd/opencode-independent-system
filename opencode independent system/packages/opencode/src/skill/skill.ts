@@ -13,6 +13,7 @@ import { Bus } from "@/bus"
 import { Session } from "@/session"
 import { Discovery } from "./discovery"
 import { Glob } from "../util/glob"
+import { Effect } from "effect"
 
 export namespace Skill {
   const log = Log.create({ service: "skill" })
@@ -183,7 +184,12 @@ export namespace Skill {
       }
 
       for (const url of configSkills.urls ?? []) {
-        const list = await Discovery.pull(url)
+        const list = await Effect.runPromise(
+          Effect.gen(function* () {
+            const discovery = yield* Discovery.Service
+            return yield* discovery.pull(url)
+          }).pipe(Effect.provide(Discovery.defaultLayer)),
+        )
         for (const dir of list) {
           await scanAndMerge(dir, SKILL_PATTERN)
         }

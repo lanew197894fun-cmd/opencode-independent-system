@@ -3,10 +3,23 @@ import { Clipboard } from "@tui/util/clipboard"
 import { Selection } from "@tui/util/selection"
 import { MouseButton, TextAttributes } from "@opentui/core"
 import { RouteProvider, useRoute } from "@tui/context/route"
-import { Switch, Match, createEffect, untrack, ErrorBoundary, createSignal, onMount, batch, Show, on } from "solid-js"
+import {
+  Switch,
+  Match,
+  createEffect,
+  createMemo,
+  untrack,
+  ErrorBoundary,
+  createSignal,
+  onMount,
+  batch,
+  Show,
+  on,
+} from "solid-js"
 import { win32DisableProcessedInput, win32FlushInputBuffer, win32InstallCtrlCGuard } from "./win32"
 import { Flag } from "@/flag/flag"
 import semver from "semver"
+import { t, initializeI18n, toggleLanguage, currentLanguage, translations } from "@/util/i18n"
 import { DialogProvider, useDialog } from "@tui/ui/dialog"
 import { DialogProvider as DialogProviderList } from "@tui/component/dialog-provider"
 import { SDKProvider, useSDK } from "@tui/context/sdk"
@@ -218,6 +231,21 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
   const exit = useExit()
   const promptRef = usePromptRef()
 
+  // Create reactive translation function that updates when language changes
+  const reactiveT = createMemo(() => {
+    const lang = currentLanguage()
+    return (key: string, params?: Record<string, string | number>) => {
+      let translation = translations[lang][key] || translations["en"][key] || key
+      if (params) {
+        for (const [paramKey, value] of Object.entries(params)) {
+          translation = translation.replace(new RegExp(`\\{${paramKey}\\}`, "g"), String(value))
+        }
+      }
+      return translation
+    }
+  })
+  const t = (key: string, params?: Record<string, string | number>) => reactiveT()(key, params)
+
   useKeyboard((evt) => {
     if (!Flag.OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT) return
     if (!renderer.getSelection()) return
@@ -287,6 +315,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
 
   const args = useArgs()
   onMount(() => {
+    initializeI18n()
     batch(() => {
       if (args.agent) local.agent.set(args.agent)
       if (args.model) {
@@ -362,7 +391,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
   const connected = useConnected()
   command.register(() => [
     {
-      title: "Switch session",
+      title: t("menu.switch_session"),
       value: "session.list",
       keybind: "session_list",
       category: "Session",
@@ -378,7 +407,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
     ...(Flag.OPENCODE_EXPERIMENTAL_WORKSPACES
       ? [
           {
-            title: "Manage workspaces",
+            title: t("menu.manage_workspaces"),
             value: "workspace.list",
             category: "Workspace",
             suggested: true,
@@ -392,7 +421,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
         ]
       : []),
     {
-      title: "New session",
+      title: t("menu.new_session"),
       suggested: route.data.type === "session",
       value: "session.new",
       keybind: "session_new",
@@ -416,7 +445,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Switch model",
+      title: t("menu.switch_model"),
       value: "model.list",
       keybind: "model_list",
       suggested: true,
@@ -429,7 +458,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Model cycle",
+      title: t("menu.model_cycle"),
       value: "model.cycle_recent",
       keybind: "model_cycle_recent",
       category: "Agent",
@@ -439,7 +468,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Model cycle reverse",
+      title: t("menu.model_cycle_reverse"),
       value: "model.cycle_recent_reverse",
       keybind: "model_cycle_recent_reverse",
       category: "Agent",
@@ -449,7 +478,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Favorite cycle",
+      title: t("menu.favorite_cycle"),
       value: "model.cycle_favorite",
       keybind: "model_cycle_favorite",
       category: "Agent",
@@ -459,7 +488,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Favorite cycle reverse",
+      title: t("menu.favorite_cycle_reverse"),
       value: "model.cycle_favorite_reverse",
       keybind: "model_cycle_favorite_reverse",
       category: "Agent",
@@ -469,7 +498,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Switch agent",
+      title: t("menu.switch_agent"),
       value: "agent.list",
       keybind: "agent_list",
       category: "Agent",
@@ -481,7 +510,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Toggle MCPs",
+      title: t("menu.toggle_mcps"),
       value: "mcp.list",
       category: "Agent",
       slash: {
@@ -492,7 +521,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Agent cycle",
+      title: t("menu.agent_cycle"),
       value: "agent.cycle",
       keybind: "agent_cycle",
       category: "Agent",
@@ -502,7 +531,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Variant cycle",
+      title: t("menu.variant_cycle"),
       value: "variant.cycle",
       keybind: "variant_cycle",
       category: "Agent",
@@ -512,7 +541,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Agent cycle reverse",
+      title: t("menu.agent_cycle_reverse"),
       value: "agent.cycle.reverse",
       keybind: "agent_cycle_reverse",
       category: "Agent",
@@ -522,7 +551,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Connect provider",
+      title: t("menu.connect_provider"),
       value: "provider.connect",
       suggested: !connected(),
       slash: {
@@ -534,7 +563,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       category: "Provider",
     },
     {
-      title: "View status",
+      title: t("menu.view_status"),
       keybind: "status_view",
       value: "opencode.status",
       slash: {
@@ -546,7 +575,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       category: "System",
     },
     {
-      title: "Switch theme",
+      title: t("menu.switch_theme"),
       value: "theme.switch",
       keybind: "theme_list",
       slash: {
@@ -558,7 +587,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       category: "System",
     },
     {
-      title: "Toggle Theme Mode",
+      title: t("menu.toggle_theme_mode"),
       value: "theme.switch_mode",
       onSelect: (dialog) => {
         setMode(mode() === "dark" ? "light" : "dark")
@@ -567,7 +596,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       category: "System",
     },
     {
-      title: locked() ? "Unlock Theme Mode" : "Lock Theme Mode",
+      title: locked() ? t("menu.unlock_theme_mode") : t("menu.lock_theme_mode"),
       value: "theme.mode.lock",
       onSelect: (dialog) => {
         if (locked()) unlock()
@@ -577,7 +606,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       category: "System",
     },
     {
-      title: "Help",
+      title: t("menu.help"),
       value: "help.show",
       slash: {
         name: "help",
@@ -588,7 +617,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       category: "System",
     },
     {
-      title: "Open docs",
+      title: t("menu.open_docs"),
       value: "docs.open",
       onSelect: () => {
         open("https://opencode.ai/docs").catch(() => {})
@@ -597,7 +626,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       category: "System",
     },
     {
-      title: "Exit the app",
+      title: t("menu.exit_app"),
       value: "app.exit",
       slash: {
         name: "exit",
@@ -607,7 +636,16 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       category: "System",
     },
     {
-      title: "Toggle debug panel",
+      title: t("menu.switch_language"),
+      value: "app.switch_language",
+      category: "System",
+      onSelect: () => {
+        toggleLanguage()
+        dialog.clear()
+      },
+    },
+    {
+      title: t("menu.toggle_debug_panel"),
       category: "System",
       value: "app.debug",
       onSelect: (dialog) => {
@@ -616,7 +654,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Toggle console",
+      title: t("menu.toggle_console"),
       category: "System",
       value: "app.console",
       onSelect: (dialog) => {
@@ -625,7 +663,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Write heap snapshot",
+      title: t("menu.write_heap_snapshot"),
       category: "System",
       value: "app.heap_snapshot",
       onSelect: async (dialog) => {
@@ -639,7 +677,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: "Suspend terminal",
+      title: t("menu.suspend_terminal"),
       value: "terminal.suspend",
       keybind: "terminal_suspend",
       category: "System",
@@ -655,7 +693,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: terminalTitleEnabled() ? "Disable terminal title" : "Enable terminal title",
+      title: terminalTitleEnabled() ? t("menu.disable_terminal_title") : t("menu.enable_terminal_title"),
       value: "terminal.title.toggle",
       keybind: "terminal_title_toggle",
       category: "System",
@@ -670,7 +708,7 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: kv.get("animations_enabled", true) ? "Disable animations" : "Enable animations",
+      title: kv.get("animations_enabled", true) ? t("menu.disable_animations") : t("menu.enable_animations"),
       value: "app.toggle.animations",
       category: "System",
       onSelect: (dialog) => {
@@ -679,7 +717,8 @@ function App(props: { onSnapshot?: () => Promise<string[]> }) {
       },
     },
     {
-      title: kv.get("diff_wrap_mode", "word") === "word" ? "Disable diff wrapping" : "Enable diff wrapping",
+      title:
+        kv.get("diff_wrap_mode", "word") === "word" ? t("menu.disable_diff_wrapping") : t("menu.enable_diff_wrapping"),
       value: "app.toggle.diffwrap",
       category: "System",
       onSelect: (dialog) => {

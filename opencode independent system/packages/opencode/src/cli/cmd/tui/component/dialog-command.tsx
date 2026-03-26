@@ -97,7 +97,7 @@ function init() {
     },
     suspended,
     show() {
-      dialog.replace(() => <DialogCommand options={visibleOptions()} suggestedOptions={suggestedOptions()} />)
+      dialog.replace(() => <DialogCommand options={visibleOptions} suggestedOptions={suggestedOptions} />)
     },
     register(cb: () => CommandOption[]) {
       const results = createMemo(cb)
@@ -137,11 +137,11 @@ export function CommandProvider(props: ParentProps) {
   return <ctx.Provider value={value}>{props.children}</ctx.Provider>
 }
 
-function DialogCommand(props: { options: CommandOption[]; suggestedOptions: CommandOption[] }) {
+function DialogCommand(props: { options: Accessor<CommandOption[]>; suggestedOptions: Accessor<CommandOption[]> }) {
   let ref: DialogSelectRef<string>
   const list = () => {
-    if (ref?.filter) return props.options
-    return [...props.suggestedOptions, ...props.options]
+    if (ref?.filter) return props.options()
+    return [...props.suggestedOptions(), ...props.options()]
   }
   return <DialogSelect ref={(r) => (ref = r)} title="Commands" options={list()} />
 }

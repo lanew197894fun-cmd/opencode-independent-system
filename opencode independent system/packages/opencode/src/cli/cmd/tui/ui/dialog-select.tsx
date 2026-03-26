@@ -14,7 +14,7 @@ import { Locale } from "@/util/locale"
 export interface DialogSelectProps<T> {
   title: string
   placeholder?: string
-  options: DialogSelectOption<T>[]
+  options: DialogSelectOption<T>[] | (() => DialogSelectOption<T>[])
   flat?: boolean
   ref?: (ref: DialogSelectRef<T>) => void
   onMove?: (option: DialogSelectOption<T>) => void
@@ -72,11 +72,15 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
 
   let input: InputRenderable
 
+  // Helper to get options as array (handles both array and accessor function)
+  const getOptions = () => (typeof props.options === "function" ? props.options() : props.options)
+
   const filtered = createMemo(() => {
-    if (props.skipFilter) return props.options.filter((x) => x.disabled !== true)
+    const optionsArray = getOptions()
+    if (props.skipFilter) return optionsArray.filter((x) => x.disabled !== true)
     const needle = store.filter.toLowerCase()
     const options = pipe(
-      props.options,
+      optionsArray,
       filter((x) => x.disabled !== true),
     )
     if (!needle) return options
