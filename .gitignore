@@ -28,3 +28,6 @@ npm-debug.log*
 # Tauri
 src-tauri/target/
 src-tauri/Cargo.lock
+*.iso
+ia-binary
+opencode-linux-x64-baseline/
